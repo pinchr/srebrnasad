@@ -1,0 +1,84 @@
+.gallery {
+  padding: 60px 20px;
+  background-color: #f9f7f4;
+}
+
+.gallery .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gallery h2 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.gallery-intro {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 3rem;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.gallery-item {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.gallery-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #2c5f2d 0%, #4caf50 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+}
+
+.gallery-item h3 {
+  padding: 1rem 1rem 0.5rem;
+  margin: 0;
+}
+
+.gallery-item p {
+  padding: 0 1rem 1rem;
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.gallery-note {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+}
+
+@media (max-width: 600px) {
+  .gallery h2 {
+    font-size: 1.8rem;
+  }
+
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
