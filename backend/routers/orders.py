@@ -15,7 +15,7 @@ class AppleItem(BaseModel):
 class OrderCreate(BaseModel):
     """Create new order"""
     apples: list[AppleItem]
-    packaging: str = Field(..., regex="^(own|box)$")
+    packaging: str = Field(..., pattern="^(own|box)$")
     customer_name: str = Field(..., min_length=1, max_length=100)
     customer_email: Optional[str] = None
     customer_phone: str = Field(..., min_length=1, max_length=20)
@@ -152,7 +152,7 @@ async def create_order(order: OrderCreate):
         )
 
 @router.get("/", tags=["admin"])
-async def get_all_orders(skip: int = 0, limit: int = 100, status_filter: Optional[str] = None):
+async def get_all_orders(skip: int = 0, limit: int = 100, status_filter: Optional[str] = None, new_status: Optional[str] = None):
     """
     Get all orders (admin only).
     
@@ -224,8 +224,12 @@ async def get_order(order_id: str):
             detail=f"Nie udało się pobrać zamówienia: {str(e)}"
         )
 
+class StatusUpdate(BaseModel):
+    """Update order status"""
+    new_status: str
+
 @router.put("/{order_id}/status", tags=["admin"])
-async def update_order_status(order_id: str, new_status: str):
+async def update_order_status(order_id: str, status_update: StatusUpdate):
     """
     Update order status (admin only).
     
@@ -233,7 +237,7 @@ async def update_order_status(order_id: str, new_status: str):
     """
     valid_statuses = ["pending", "confirmed", "ready", "picked_up", "cancelled"]
     
-    if new_status not in valid_statuses:
+    if status_update.new_status not in valid_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Nieprawidłowy status. Musi być jeden z: {', '.join(valid_statuses)}"
@@ -252,7 +256,7 @@ async def update_order_status(order_id: str, new_status: str):
             {"_id": ObjectId(order_id)},
             {
                 "$set": {
-                    "status": new_status,
+                    "status": status_update.new_status,
                     "updated_at": datetime.utcnow()
                 }
             }

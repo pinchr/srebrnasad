@@ -5,15 +5,16 @@ import About from './components/About'
 import Gallery from './components/Gallery'
 import Order from './components/Order'
 import Contact from './components/Contact'
+import AdminPanel from './components/AdminPanel'
 import Footer from './components/Footer'
 import './App.css'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'gallery' | 'order' | 'contact'>('home')
+  const [currentPage, setCurrentPage] = useState<'home' | 'gallery' | 'order' | 'contact' | 'admin'>('home')
 
   return (
     <div className="app">
-      <Header currentPage={currentPage} setCurrentPage={setCurrentPage} />
+      {currentPage !== 'admin' && <Header currentPage={currentPage} setCurrentPage={setCurrentPage} />}
       
       {currentPage === 'home' && (
         <>
@@ -25,8 +26,9 @@ function App() {
       {currentPage === 'gallery' && <Gallery />}
       {currentPage === 'order' && <Order />}
       {currentPage === 'contact' && <Contact />}
+      {currentPage === 'admin' && <AdminPanel setCurrentPage={setCurrentPage} />}
       
-      <Footer />
+      {currentPage !== 'admin' && <Footer />}
     </div>
   )
 }

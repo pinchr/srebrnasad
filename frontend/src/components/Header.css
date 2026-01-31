@@ -51,6 +51,10 @@
   border-bottom: 2px solid #4caf50;
 }
 
+.nav-link.admin-link {
+  font-size: 1.2rem;
+}
+
 @media (max-width: 600px) {
   .header .container {
     flex-direction: column;

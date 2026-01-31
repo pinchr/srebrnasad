@@ -1,8 +1,8 @@
 import './Header.css'
 
 interface HeaderProps {
-  currentPage: 'home' | 'gallery' | 'contact' | 'order'
-  setCurrentPage: (page: 'home' | 'gallery' | 'contact' | 'order') => void
+  currentPage: 'home' | 'gallery' | 'contact' | 'order' | 'admin'
+  setCurrentPage: (page: 'home' | 'gallery' | 'contact' | 'order' | 'admin') => void
 }
 
 export default function Header({ currentPage, setCurrentPage }: HeaderProps) {
@@ -37,6 +37,13 @@ export default function Header({ currentPage, setCurrentPage }: HeaderProps) {
             onClick={() => setCurrentPage('contact')}
           >
             Kontakt
+          </button>
+          <button 
+            className={`nav-link admin-link ${currentPage === 'admin' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('admin')}
+            title="Panel administracyjny"
+          >
+            ⚙️
           </button>
         </nav>
       </div>
