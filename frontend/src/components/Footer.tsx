@@ -9,25 +9,25 @@ export default function Footer() {
         <div className="footer-content">
           <div className="footer-section">
             <h4>Srebrna Sad</h4>
-            <p>Fresh apples from our family orchard in Naruszewo, Poland</p>
+            <p>Świeże jabłka z naszego rodzinnego sadu w Naruszewo, Polska</p>
           </div>
           <div className="footer-section">
-            <h4>Quick Links</h4>
+            <h4>Szybkie Linki</h4>
             <ul>
-              <li><a href="#home">Home</a></li>
-              <li><a href="#gallery">Gallery</a></li>
-              <li><a href="#contact">Contact</a></li>
+              <li><a href="#home">Strona główna</a></li>
+              <li><a href="#gallery">Galeria</a></li>
+              <li><a href="#contact">Kontakt</a></li>
             </ul>
           </div>
           <div className="footer-section">
-            <h4>Contact</h4>
-            <p>Srebrna, Naruszewo, Poland</p>
+            <h4>Kontakt</h4>
+            <p>Srebrna 15, Naruszewo, Polska</p>
             <p>+48 XXX XXX XXX</p>
             <p>info@srebrnasad.pl</p>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; {currentYear} Srebrna Sad. All rights reserved.</p>
+          <p>&copy; {currentYear} Srebrna Sad. Wszelkie prawa zastrzeżone.</p>
         </div>
       </div>
     </footer>

@@ -49,20 +49,20 @@ export default function Contact() {
   return (
     <section className="contact">
       <div className="container">
-        <h2>Contact Us</h2>
+        <h2>Kontakt</h2>
         <div className="contact-content">
           <div className="contact-info">
-            <h3>Get in Touch</h3>
+            <h3>Skontaktuj się z nami</h3>
             <p>
-              Have questions about our apples or want to place an order? 
-              Contact us using the form or reach out directly.
+              Masz pytania o nasze jabłka lub chcesz złożyć zamówienie? 
+              Skontaktuj się z nami poprzez formularz lub zadzwoń bezpośrednio.
             </p>
             <div className="info-item">
-              <span className="label">📍 Location:</span>
-              <p>Srebrna, Naruszewo, Poland</p>
+              <span className="label">📍 Adres:</span>
+              <p>Srebrna 15, Naruszewo, Polska</p>
             </div>
             <div className="info-item">
-              <span className="label">📞 Phone:</span>
+              <span className="label">📞 Telefon:</span>
               <p>+48 XXX XXX XXX</p>
             </div>
             <div className="info-item">
@@ -74,7 +74,7 @@ export default function Contact() {
           <form onSubmit={handleSubmit} className="contact-form">
             {submitted && (
               <div className="success-message">
-                ✓ Thank you! We received your message.
+                ✓ Dziękujemy! Otrzymaliśmy Twoją wiadomość.
               </div>
             )}
             {error && (
@@ -84,7 +84,7 @@ export default function Contact() {
             )}
 
             <div className="form-group">
-              <label htmlFor="name">Name *</label>
+              <label htmlFor="name">Imię i nazwisko *</label>
               <input
                 type="text"
                 id="name"
@@ -92,7 +92,7 @@ export default function Contact() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                placeholder="Your name"
+                placeholder="Twoje imię i nazwisko"
               />
             </div>
 
@@ -105,12 +105,12 @@ export default function Contact() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                placeholder="your@email.com"
+                placeholder="twój@email.com"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="phone">Phone</label>
+              <label htmlFor="phone">Telefon</label>
               <input
                 type="tel"
                 id="phone"
@@ -122,20 +122,20 @@ export default function Contact() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="message">Message *</label>
+              <label htmlFor="message">Wiadomość *</label>
               <textarea
                 id="message"
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
                 required
-                placeholder="Your message..."
+                placeholder="Twoja wiadomość..."
                 rows={5}
               />
             </div>
 
             <button type="submit" disabled={loading} className="submit-btn">
-              {loading ? 'Sending...' : 'Send Message'}
+              {loading ? 'Wysyłanie...' : 'Wyślij wiadomość'}
             </button>
           </form>
         </div>

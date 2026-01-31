@@ -44,7 +44,17 @@ def init_db():
     
     if "apples" not in db.list_collection_names():
         db.create_collection("apples")
+        db["apples"].create_index("name")
+        db["apples"].create_index("available")
         print("✓ Created 'apples' collection")
+    
+    if "orders" not in db.list_collection_names():
+        db.create_collection("orders")
+        db["orders"].create_index("customer_email")
+        db["orders"].create_index("status")
+        db["orders"].create_index("created_at")
+        db["orders"].create_index("pickup_date")
+        print("✓ Created 'orders' collection")
 
 def get_db():
     """Get database connection"""

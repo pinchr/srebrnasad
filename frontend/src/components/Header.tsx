@@ -1,8 +1,8 @@
 import './Header.css'
 
 interface HeaderProps {
-  currentPage: 'home' | 'gallery' | 'contact'
-  setCurrentPage: (page: 'home' | 'gallery' | 'contact') => void
+  currentPage: 'home' | 'gallery' | 'contact' | 'order'
+  setCurrentPage: (page: 'home' | 'gallery' | 'contact' | 'order') => void
 }
 
 export default function Header({ currentPage, setCurrentPage }: HeaderProps) {
@@ -11,26 +11,32 @@ export default function Header({ currentPage, setCurrentPage }: HeaderProps) {
       <div className="container">
         <div className="logo">
           <h1>🍎 Srebrna Sad</h1>
-          <p className="subtitle">Orchard in Naruszewo</p>
+          <p className="subtitle">Sad w Srebrnej</p>
         </div>
         <nav className="nav">
           <button 
             className={`nav-link ${currentPage === 'home' ? 'active' : ''}`}
             onClick={() => setCurrentPage('home')}
           >
-            Home
+            Strona główna
           </button>
           <button 
             className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
             onClick={() => setCurrentPage('gallery')}
           >
-            Gallery
+            Galeria
+          </button>
+          <button 
+            className={`nav-link ${currentPage === 'order' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('order')}
+          >
+            Zamów
           </button>
           <button 
             className={`nav-link ${currentPage === 'contact' ? 'active' : ''}`}
             onClick={() => setCurrentPage('contact')}
           >
-            Contact
+            Kontakt
           </button>
         </nav>
       </div>

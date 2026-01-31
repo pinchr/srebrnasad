@@ -4,20 +4,20 @@ import './Gallery.css'
 export default function Gallery() {
   // Placeholder images - in production these would come from backend
   const [images] = useState([
-    { id: 1, title: 'Orchard View', category: 'orchard', alt: 'Beautiful view of our apple orchard' },
-    { id: 2, title: 'Fresh Apples', category: 'apples', alt: 'Freshly picked apples' },
-    { id: 3, title: 'Harvest Time', category: 'harvest', alt: 'Apples being harvested' },
-    { id: 4, title: 'Sunset at Orchard', category: 'orchard', alt: 'Sunset over the orchard' },
-    { id: 5, title: 'Apple Varieties', category: 'apples', alt: 'Different varieties of apples' },
-    { id: 6, title: 'Family Tradition', category: 'harvest', alt: 'Our family harvesting apples' },
+    { id: 1, title: 'Widok Sadu', category: 'orchard', alt: 'Piękny widok na nasz sad jabłkowy' },
+    { id: 2, title: 'Świeże Jabłka', category: 'apples', alt: 'Świeżo zebrane jabłka' },
+    { id: 3, title: 'Czas Zbioru', category: 'harvest', alt: 'Zbieranie jabłek' },
+    { id: 4, title: 'Zachód w Sadzie', category: 'orchard', alt: 'Zachód słońca nad sadem' },
+    { id: 5, title: 'Odmiany Jabłek', category: 'apples', alt: 'Różne odmiany jabłek' },
+    { id: 6, title: 'Tradycja Rodzinna', category: 'harvest', alt: 'Nasza rodzina zbierająca jabłka' },
   ])
 
   return (
     <section className="gallery">
       <div className="container">
-        <h2>Photo Gallery</h2>
+        <h2>Galeria Zdjęć</h2>
         <p className="gallery-intro">
-          Take a look at our beautiful orchard and fresh apples
+          Spójrz na nasz piękny sad i świeże jabłka
         </p>
         <div className="gallery-grid">
           {images.map((image) => (
@@ -31,7 +31,7 @@ export default function Gallery() {
           ))}
         </div>
         <p className="gallery-note">
-          More photos coming soon as we update our gallery with latest harvest images!
+          Więcej zdjęć wkrótce! Aktualizujemy galerię o najnowsze zdjęcia ze zbioru.
         </p>
       </div>
     </section>

@@ -37,6 +37,11 @@ app.add_middleware(
 # Include routers
 app.include_router(contact.router)
 
+# Import and include routers for Phase 2
+from routers import apples, orders
+app.include_router(apples.router)
+app.include_router(orders.router)
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on startup"""
