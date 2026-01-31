@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 from bson import ObjectId
@@ -7,13 +7,17 @@ from database import get_db
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
-class OrderCreate(BaseModel):
-    """Create new order"""
+class AppleItem(BaseModel):
+    """Apple item in order"""
     apple_id: str
     quantity_kg: int = Field(..., ge=10)
+
+class OrderCreate(BaseModel):
+    """Create new order"""
+    apples: list[AppleItem]
     packaging: str = Field(..., regex="^(own|box)$")
     customer_name: str = Field(..., min_length=1, max_length=100)
-    customer_email: EmailStr
+    customer_email: Optional[str] = None
     customer_phone: str = Field(..., min_length=1, max_length=20)
     pickup_date: str
     pickup_time: str
@@ -21,40 +25,48 @@ class OrderCreate(BaseModel):
 class OrderResponse(BaseModel):
     """Order response"""
     id: str
-    apple_id: str
-    quantity_kg: int
+    apples: list[dict]
     packaging: str
     customer_name: str
-    customer_email: str
+    customer_email: Optional[str]
     customer_phone: str
     pickup_date: str
     pickup_time: str
     status: str
+    total_quantity_kg: int
     total_price: float
     created_at: datetime
 
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 async def create_order(order: OrderCreate):
     """
-    Create new order.
+    Create new order with multiple apple varieties.
     
-    Minimum 10 kg, can be increased by 5 kg increments.
+    Minimum 10 kg per variety, can be increased by 5 kg increments.
     """
     db = get_db()
     
-    # Validate quantity (10, 15, 20, 25, etc.)
-    if (order.quantity_kg - 10) % 5 != 0:
+    # Validate at least one apple selected
+    if not order.apples or len(order.apples) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Quantity must be 10 kg or more, increased by 5 kg increments"
+            detail="Wybierz co najmniej jedną odmianę jabłek"
         )
+    
+    # Validate quantities
+    for apple_item in order.apples:
+        if apple_item.quantity_kg < 10 or (apple_item.quantity_kg - 10) % 5 != 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ilość musi wynosić co najmniej 10 kg, zwiększana co 5 kg"
+            )
     
     if db is None:
         # Development mode - return success
+        total_qty = sum(a.quantity_kg for a in order.apples)
         return OrderResponse(
             id="dev-mode",
-            apple_id=order.apple_id,
-            quantity_kg=order.quantity_kg,
+            apples=[a.dict() for a in order.apples],
             packaging=order.packaging,
             customer_name=order.customer_name,
             customer_email=order.customer_email,
@@ -62,29 +74,44 @@ async def create_order(order: OrderCreate):
             pickup_date=order.pickup_date,
             pickup_time=order.pickup_time,
             status="pending",
+            total_quantity_kg=total_qty,
             total_price=0.0,
             created_at=datetime.utcnow()
         )
     
     try:
-        # Get apple to calculate price
-        apple = db["apples"].find_one({"_id": ObjectId(order.apple_id)})
-        if not apple:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Apple variety not found"
-            )
+        # Fetch all apples and calculate prices
+        apples_data = []
+        total_price = 0.0
+        total_quantity = 0
         
-        # Calculate total price
-        total_price = apple["price"] * order.quantity_kg
+        for apple_item in order.apples:
+            apple = db["apples"].find_one({"_id": ObjectId(apple_item.apple_id)})
+            if not apple:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Odmiana jabłek nie znaleziona: {apple_item.apple_id}"
+                )
+            
+            item_price = apple["price"] * apple_item.quantity_kg
+            total_price += item_price
+            total_quantity += apple_item.quantity_kg
+            
+            apples_data.append({
+                "apple_id": apple_item.apple_id,
+                "apple_name": apple["name"],
+                "quantity_kg": apple_item.quantity_kg,
+                "price_per_kg": apple["price"],
+                "subtotal": item_price
+            })
+        
+        # Add packaging cost
         if order.packaging == "box":
-            total_price += order.quantity_kg * 2  # 2 zł per kg for packaging
+            total_price += total_quantity * 2  # 2 zł per kg for packaging
         
         # Create order document
         order_doc = {
-            "apple_id": order.apple_id,
-            "apple_name": apple["name"],
-            "quantity_kg": order.quantity_kg,
+            "apples": apples_data,
             "packaging": order.packaging,
             "customer_name": order.customer_name,
             "customer_email": order.customer_email,
@@ -92,7 +119,9 @@ async def create_order(order: OrderCreate):
             "pickup_date": order.pickup_date,
             "pickup_time": order.pickup_time,
             "status": "pending",  # pending, confirmed, ready, picked_up, cancelled
+            "total_quantity_kg": total_quantity,
             "total_price": total_price,
+            "packaging_cost": total_quantity * 2 if order.packaging == "box" else 0,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
@@ -102,8 +131,7 @@ async def create_order(order: OrderCreate):
         
         return OrderResponse(
             id=str(result.inserted_id),
-            apple_id=order.apple_id,
-            quantity_kg=order.quantity_kg,
+            apples=apples_data,
             packaging=order.packaging,
             customer_name=order.customer_name,
             customer_email=order.customer_email,
@@ -111,7 +139,8 @@ async def create_order(order: OrderCreate):
             pickup_date=order.pickup_date,
             pickup_time=order.pickup_time,
             status="pending",
-            total_price=order_doc["total_price"],
+            total_quantity_kg=total_quantity,
+            total_price=total_price,
             created_at=order_doc["created_at"]
         )
     except HTTPException:
@@ -119,7 +148,7 @@ async def create_order(order: OrderCreate):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create order: {str(e)}"
+            detail=f"Nie udało się złożyć zamówienia: {str(e)}"
         )
 
 @router.get("/", tags=["admin"])
@@ -162,7 +191,7 @@ async def get_all_orders(skip: int = 0, limit: int = 100, status_filter: Optiona
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch orders: {str(e)}"
+            detail=f"Nie udało się pobrać zamówień: {str(e)}"
         )
 
 @router.get("/{order_id}", tags=["admin"])
@@ -173,7 +202,7 @@ async def get_order(order_id: str):
     if db is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Order not found"
+            detail="Zamówienie nie znalezione"
         )
     
     try:
@@ -182,7 +211,7 @@ async def get_order(order_id: str):
         if not order:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Order not found"
+                detail="Zamówienie nie znalezione"
             )
         
         order["id"] = str(order["_id"])
@@ -192,7 +221,7 @@ async def get_order(order_id: str):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch order: {str(e)}"
+            detail=f"Nie udało się pobrać zamówienia: {str(e)}"
         )
 
 @router.put("/{order_id}/status", tags=["admin"])
@@ -207,7 +236,7 @@ async def update_order_status(order_id: str, new_status: str):
     if new_status not in valid_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}"
+            detail=f"Nieprawidłowy status. Musi być jeden z: {', '.join(valid_statuses)}"
         )
     
     db = get_db()
@@ -215,7 +244,7 @@ async def update_order_status(order_id: str, new_status: str):
     if db is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection failed"
+            detail="Brak połączenia z bazą danych"
         )
     
     try:
@@ -232,7 +261,7 @@ async def update_order_status(order_id: str, new_status: str):
         if result.matched_count == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Order not found"
+                detail="Zamówienie nie znalezione"
             )
         
         updated_order = db["orders"].find_one({"_id": ObjectId(order_id)})
@@ -243,5 +272,5 @@ async def update_order_status(order_id: str, new_status: str):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update order: {str(e)}"
+            detail=f"Nie udało się zaktualizować zamówienia: {str(e)}"
         )

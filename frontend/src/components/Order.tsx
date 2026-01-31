@@ -11,9 +11,13 @@ interface Apple {
   available: boolean
 }
 
-interface OrderFormData {
+interface AppleSelection {
   apple_id: string
   quantity_kg: number
+}
+
+interface OrderFormData {
+  apples: AppleSelection[]
   packaging: 'own' | 'box'
   customer_name: string
   customer_email: string
@@ -24,10 +28,9 @@ interface OrderFormData {
 
 export default function Order() {
   const [apples, setApples] = useState<Apple[]>([])
-  const [selectedApple, setSelectedApple] = useState<Apple | null>(null)
+  const [selectedApples, setSelectedApples] = useState<AppleSelection[]>([])
   const [formData, setFormData] = useState<OrderFormData>({
-    apple_id: '',
-    quantity_kg: 10,
+    apples: [],
     packaging: 'box',
     customer_name: '',
     customer_email: '',
@@ -39,22 +42,29 @@ export default function Order() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
 
   useEffect(() => {
     fetchApples()
   }, [])
 
+  useEffect(() => {
+    // Update form apples when selectedApples changes
+    setFormData(prev => ({
+      ...prev,
+      apples: selectedApples
+    }))
+  }, [selectedApples])
+
+  useEffect(() => {
+    // Calculate available times based on order size
+    updateAvailableTimes()
+  }, [formData.pickup_date, selectedApples])
+
   const fetchApples = async () => {
     try {
       const response = await axios.get('/api/apples')
       setApples(response.data.apples)
-      if (response.data.apples.length > 0) {
-        setSelectedApple(response.data.apples[0])
-        setFormData(prev => ({
-          ...prev,
-          apple_id: response.data.apples[0]._id
-        }))
-      }
       setLoading(false)
     } catch (err) {
       console.error('Failed to fetch apples:', err)
@@ -63,30 +73,64 @@ export default function Order() {
         { _id: '1', name: 'Gala', description: 'Słodkie i socziste', price: 4.50, available: true },
         { _id: '2', name: 'Jonagold', description: 'Mieszanka słodkości i kwaskości', price: 5.00, available: true },
         { _id: '3', name: 'Granny Smith', description: 'Kwaskowe i chrupkie', price: 4.00, available: true },
+        { _id: '4', name: 'Fuji', description: 'Słodkie z nutą kardamonu', price: 5.50, available: true },
       ])
       setLoading(false)
     }
   }
 
-  const handleAppleChange = (appleId: string) => {
-    const apple = apples.find(a => a._id === appleId)
-    if (apple) {
-      setSelectedApple(apple)
-      setFormData(prev => ({
-        ...prev,
-        apple_id: appleId
-      }))
+  const addApple = (appleId: string) => {
+    // Check if already selected
+    if (selectedApples.find(a => a.apple_id === appleId)) {
+      return
     }
+    setSelectedApples([...selectedApples, { apple_id: appleId, quantity_kg: 10 }])
   }
 
-  const handleQuantityChange = (change: number) => {
-    const newQuantity = formData.quantity_kg + change
-    if (newQuantity >= 10) {
-      setFormData(prev => ({
-        ...prev,
-        quantity_kg: newQuantity
-      }))
+  const removeApple = (appleId: string) => {
+    setSelectedApples(selectedApples.filter(a => a.apple_id !== appleId))
+  }
+
+  const updateAppleQuantity = (appleId: string, quantity: number) => {
+    if (quantity < 10) quantity = 10
+    setSelectedApples(
+      selectedApples.map(a =>
+        a.apple_id === appleId ? { ...a, quantity_kg: quantity } : a
+      )
+    )
+  }
+
+  const updateAvailableTimes = () => {
+    const totalQuantity = selectedApples.reduce((sum, a) => sum + a.quantity_kg, 0)
+    const times: string[] = []
+
+    // More time needed for larger orders
+    let minHourOffset = 1 // 1 hour minimum
+    if (totalQuantity > 50) minHourOffset = 3
+    else if (totalQuantity > 30) minHourOffset = 2
+
+    // Generate available times
+    for (let hour = 8; hour <= 18; hour++) {
+      for (let min of [0, 30]) {
+        const time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`
+        times.push(time)
+      }
     }
+
+    setAvailableTimes(times)
+  }
+
+  const getMinPickupDate = () => {
+    const today = new Date()
+    const totalQuantity = selectedApples.reduce((sum, a) => sum + a.quantity_kg, 0)
+
+    // Larger orders need more notice
+    let daysNeeded = 1
+    if (totalQuantity > 50) daysNeeded = 3
+    else if (totalQuantity > 30) daysNeeded = 2
+
+    const minDate = new Date(today.getTime() + daysNeeded * 24 * 60 * 60 * 1000)
+    return minDate.toISOString().split('T')[0]
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -102,12 +146,18 @@ export default function Order() {
     setSubmitting(true)
     setError('')
 
+    if (selectedApples.length === 0) {
+      setError('Wybierz co najmniej jedną odmianę jabłek')
+      setSubmitting(false)
+      return
+    }
+
     try {
       await axios.post('/api/orders', formData)
       setSubmitted(true)
+      setSelectedApples([])
       setFormData({
-        apple_id: apples[0]?._id || '',
-        quantity_kg: 10,
+        apples: [],
         packaging: 'box',
         customer_name: '',
         customer_email: '',
@@ -135,27 +185,34 @@ export default function Order() {
     )
   }
 
-  const totalPrice = selectedApple ? selectedApple.price * formData.quantity_kg : 0
+  const totalQuantity = selectedApples.reduce((sum, a) => sum + a.quantity_kg, 0)
+  const totalPrice = selectedApples.reduce((sum, selection) => {
+    const apple = apples.find(a => a._id === selection.apple_id)
+    if (!apple) return sum
+    return sum + apple.price * selection.quantity_kg
+  }, 0)
+  const packagingCost = formData.packaging === 'box' ? totalQuantity * 2 : 0
 
   return (
     <section className="order">
       <div className="container">
         <h2>Zamów Jabłka</h2>
         <p className="order-intro">
-          Zamów świeże jabłka bezpośrednio z naszego sadu. Minimum 10 kg, można zwiększać co 5 kg.
+          Zamów świeże jabłka bezpośrednio z naszego sadu. Minimum 10 kg na odmianę.
         </p>
 
         <div className="order-layout">
           {/* Apple Selection */}
           <div className="apple-selection">
-            <h3>Wybierz odmianę</h3>
+            <h3>Wybierz odmiany</h3>
+            <p className="selection-hint">Kliknij na jabłko, aby je dodać do zamówienia</p>
             <div className="apple-list">
               {apples.map(apple => (
                 <button
                   key={apple._id}
-                  className={`apple-card ${selectedApple?._id === apple._id ? 'selected' : ''} ${!apple.available ? 'unavailable' : ''}`}
-                  onClick={() => handleAppleChange(apple._id)}
-                  disabled={!apple.available}
+                  className={`apple-card ${selectedApples.some(a => a.apple_id === apple._id) ? 'selected' : ''} ${!apple.available ? 'unavailable' : ''}`}
+                  onClick={() => addApple(apple._id)}
+                  disabled={!apple.available || selectedApples.some(a => a.apple_id === apple._id)}
                 >
                   <div className="apple-emoji">🍎</div>
                   <div className="apple-info">
@@ -164,6 +221,7 @@ export default function Order() {
                     <p className="price">{apple.price.toFixed(2)} zł/kg</p>
                   </div>
                   {!apple.available && <span className="unavailable-badge">Niedostępne</span>}
+                  {selectedApples.some(a => a.apple_id === apple._id) && <span className="added-badge">✓ Dodane</span>}
                 </button>
               ))}
             </div>
@@ -184,29 +242,53 @@ export default function Order() {
               </div>
             )}
 
-            {/* Quantity Selection */}
-            <div className="form-group">
-              <label>Ilość (kg) *</label>
-              <div className="quantity-selector">
-                <button
-                  type="button"
-                  className="qty-btn"
-                  onClick={() => handleQuantityChange(-5)}
-                  disabled={formData.quantity_kg <= 10}
-                >
-                  −
-                </button>
-                <span className="qty-display">{formData.quantity_kg} kg</span>
-                <button
-                  type="button"
-                  className="qty-btn"
-                  onClick={() => handleQuantityChange(5)}
-                >
-                  +
-                </button>
+            {/* Selected Apples */}
+            {selectedApples.length > 0 && (
+              <div className="selected-apples">
+                <h4>Twój wybór:</h4>
+                <div className="selected-list">
+                  {selectedApples.map(selection => {
+                    const apple = apples.find(a => a._id === selection.apple_id)
+                    if (!apple) return null
+                    return (
+                      <div key={selection.apple_id} className="selected-item">
+                        <div className="item-info">
+                          <h5>{apple.name}</h5>
+                          <div className="quantity-input-group">
+                            <label>Ilość (kg):</label>
+                            <input
+                              type="number"
+                              min="10"
+                              step="5"
+                              value={selection.quantity_kg}
+                              onChange={(e) => updateAppleQuantity(selection.apple_id, parseInt(e.target.value) || 10)}
+                              className="qty-input"
+                            />
+                            <small>{apple.price.toFixed(2)} zł/kg</small>
+                          </div>
+                          <input
+                            type="range"
+                            min="10"
+                            max="100"
+                            step="5"
+                            value={selection.quantity_kg}
+                            onChange={(e) => updateAppleQuantity(selection.apple_id, parseInt(e.target.value))}
+                            className="qty-slider"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="remove-btn"
+                          onClick={() => removeApple(selection.apple_id)}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-              <small>Minimum 10 kg, zwiększaj co 5 kg</small>
-            </div>
+            )}
 
             {/* Packaging Selection */}
             <div className="form-group">
@@ -236,28 +318,28 @@ export default function Order() {
             </div>
 
             {/* Price Preview */}
-            <div className="price-preview">
-              <div className="price-row">
-                <span>Cena za kg:</span>
-                <strong>{selectedApple?.price.toFixed(2)} zł</strong>
-              </div>
-              <div className="price-row">
-                <span>Ilość:</span>
-                <strong>{formData.quantity_kg} kg</strong>
-              </div>
-              {formData.packaging === 'box' && (
+            {totalQuantity > 0 && (
+              <div className="price-preview">
                 <div className="price-row">
-                  <span>Opakowanie:</span>
-                  <strong>{(formData.quantity_kg * 2).toFixed(2)} zł</strong>
+                  <span>Razem jabłek:</span>
+                  <strong>{totalQuantity} kg</strong>
                 </div>
-              )}
-              <div className="price-row total">
-                <span>Razem:</span>
-                <strong>
-                  {(totalPrice + (formData.packaging === 'box' ? formData.quantity_kg * 2 : 0)).toFixed(2)} zł
-                </strong>
+                <div className="price-row">
+                  <span>Wartość owoców:</span>
+                  <strong>{totalPrice.toFixed(2)} zł</strong>
+                </div>
+                {packagingCost > 0 && (
+                  <div className="price-row">
+                    <span>Opakowanie:</span>
+                    <strong>{packagingCost.toFixed(2)} zł</strong>
+                  </div>
+                )}
+                <div className="price-row total">
+                  <span>Razem:</span>
+                  <strong>{(totalPrice + packagingCost).toFixed(2)} zł</strong>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Customer Information */}
             <div className="form-group">
@@ -274,19 +356,6 @@ export default function Order() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="customer_email">Email *</label>
-              <input
-                type="email"
-                id="customer_email"
-                name="customer_email"
-                value={formData.customer_email}
-                onChange={handleChange}
-                required
-                placeholder="twój@email.com"
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="customer_phone">Telefon *</label>
               <input
                 type="tel"
@@ -299,33 +368,57 @@ export default function Order() {
               />
             </div>
 
-            {/* Pickup Date & Time */}
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="pickup_date">Data odbioru *</label>
-                <input
-                  type="date"
-                  id="pickup_date"
-                  name="pickup_date"
-                  value={formData.pickup_date}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="pickup_time">Godzina odbioru *</label>
-                <input
-                  type="time"
-                  id="pickup_time"
-                  name="pickup_time"
-                  value={formData.pickup_time}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            <div className="form-group">
+              <label htmlFor="customer_email">Email (opcjonalnie)</label>
+              <input
+                type="email"
+                id="customer_email"
+                name="customer_email"
+                value={formData.customer_email}
+                onChange={handleChange}
+                placeholder="twój@email.com"
+              />
+              <small>Wyślemy fakturę i pinezkę miejsca odbioru</small>
             </div>
 
-            <button type="submit" disabled={submitting} className="submit-btn">
+            {/* Pickup Date & Time */}
+            <div className="form-group">
+              <label htmlFor="pickup_date">Data odbioru *</label>
+              <input
+                type="date"
+                id="pickup_date"
+                name="pickup_date"
+                value={formData.pickup_date}
+                onChange={handleChange}
+                required
+                min={getMinPickupDate()}
+              />
+              {totalQuantity > 30 && (
+                <small>⏰ Duże zamówienie - minimum {Math.ceil((totalQuantity - 30) / 20 + 1)} dnia z wyprzedzeniem</small>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="pickup_time">Godzina odbioru *</label>
+              <select
+                id="pickup_time"
+                name="pickup_time"
+                value={formData.pickup_time}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Wybierz godzinę</option>
+                {availableTimes.map(time => (
+                  <option key={time} value={time}>{time}</option>
+                ))}
+              </select>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={submitting || selectedApples.length === 0} 
+              className="submit-btn"
+            >
               {submitting ? 'Zatwierdzanie...' : 'Złóż zamówienie'}
             </button>
           </form>
