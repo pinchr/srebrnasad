@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from database import get_db, init_db
-from routers import contact, upload
+from routers import contact, upload, content
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -38,6 +38,7 @@ app.add_middleware(
 # Include routers
 app.include_router(contact.router)
 app.include_router(upload.router)
+app.include_router(content.router)
 
 # Import and include routers for Phase 2
 from routers import apples, orders
