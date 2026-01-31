@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
@@ -9,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from database import get_db, init_db
-from routers import contact
+from routers import contact, upload
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -36,11 +37,16 @@ app.add_middleware(
 
 # Include routers
 app.include_router(contact.router)
+app.include_router(upload.router)
 
 # Import and include routers for Phase 2
 from routers import apples, orders
 app.include_router(apples.router)
 app.include_router(orders.router)
+
+# Mount static files for uploads
+if os.path.exists("uploads"):
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.on_event("startup")
 async def startup_event():

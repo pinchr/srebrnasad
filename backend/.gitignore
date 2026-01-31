@@ -49,3 +49,6 @@ htmlcov/
 
 # Logs
 *.log
+
+# Uploads
+uploads/

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import AdminContent from './AdminContent'
 import './AdminPanel.css'
 
 interface AdminPanelProps {
@@ -37,6 +38,7 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [showContentModal, setShowContentModal] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -69,8 +71,16 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
   }
 
   const sendSMS = (phone: string, orderNum: string, status: string) => {
+    const statusMessages: Record<string, string> = {
+      pending: 'Twoje zamówienie zostało przyjęte i oczekuje na potwierdzenie.',
+      confirmed: 'Twoje zamówienie zostało potwierdzone! Przygotowujemy jabłka.',
+      ready: 'Twoje zamówienie jest gotowe do odbioru! Zapraszamy do Srebrnej 15, Naruszewo.',
+      picked_up: 'Dziękujemy za odbiór! Zapraszamy ponownie! 🍎',
+      cancelled: 'Twoje zamówienie zostało anulowane.'
+    }
+    
     const message = encodeURIComponent(
-      `Status Twojego zamówienia nr ${orderNum}: ${getStatusLabel(status)}\n\nZamów jabłka z Srebrnej Sadu`
+      `Srebrna Sad - Zamówienie #${orderNum}\n\n${statusMessages[status] || getStatusLabel(status)}\n\nTelefon: +48 XXX XXX XXX\ninfo@srebrnasad.pl\n\n🍎 Srebrna Sad`
     )
     // Opens SMS on phone
     window.location.href = `sms:${phone}?body=${message}`
@@ -104,13 +114,24 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
     <section className="admin-panel">
       <div className="admin-header">
         <h2>Panel Administracyjny</h2>
-        <button 
-          className="back-btn"
-          onClick={() => setCurrentPage('home')}
-        >
-          ← Wróć
-        </button>
+        <div className="header-buttons">
+          <button 
+            className="content-btn"
+            onClick={() => setShowContentModal(true)}
+            title="Zarządzaj zawartością strony"
+          >
+            📝 Zawartość
+          </button>
+          <button 
+            className="back-btn"
+            onClick={() => setCurrentPage('home')}
+          >
+            ← Wróć
+          </button>
+        </div>
       </div>
+
+      {showContentModal && <AdminContent onClose={() => setShowContentModal(false)} />}
 
       <div className="admin-container">
         {/* Filters */}

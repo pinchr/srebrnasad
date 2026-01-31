@@ -12,14 +12,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .admin-header h2 {
   margin: 0;
   font-size: 2rem;
   color: white;
+  flex: 1;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.content-btn,
 .back-btn {
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
@@ -29,8 +37,10 @@
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.3s ease;
+  font-weight: bold;
 }
 
+.content-btn:hover,
 .back-btn:hover {
   background-color: rgba(255, 255, 255, 0.3);
 }
@@ -288,6 +298,12 @@
     font-size: 1.5rem;
   }
 
+  .header-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .content-btn,
   .back-btn {
     width: 100%;
   }
