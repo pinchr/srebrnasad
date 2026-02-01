@@ -366,28 +366,47 @@ export default function Order() {
             {/* Packaging Selection */}
             <div className="form-group">
               <label>Opakowanie *</label>
-              <div className="packaging-options">
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="packaging"
-                    value="own"
-                    checked={formData.packaging === 'own'}
-                    onChange={handleChange}
-                  />
-                  <span>Swoje opakowanie (darmowe)</span>
-                </label>
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    name="packaging"
-                    value="box"
-                    checked={formData.packaging === 'box'}
-                    onChange={handleChange}
-                  />
-                  <span>Nasze pudełko (+2 zł za kg)</span>
-                </label>
-              </div>
+              {formData.delivery ? (
+                <div className="packaging-options">
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="packaging"
+                      value="box"
+                      checked={true}
+                      onChange={() => {}}
+                      disabled
+                    />
+                    <span>Nasze pudełko (+2 zł za kg)</span>
+                  </label>
+                  <small style={{ marginTop: '0.5rem', display: 'block', color: '#666' }}>
+                    Przy dostawie wymagane jest nasze pudełko
+                  </small>
+                </div>
+              ) : (
+                <div className="packaging-options">
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="packaging"
+                      value="own"
+                      checked={formData.packaging === 'own'}
+                      onChange={handleChange}
+                    />
+                    <span>Swoje opakowanie (darmowe)</span>
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="packaging"
+                      value="box"
+                      checked={formData.packaging === 'box'}
+                      onChange={handleChange}
+                    />
+                    <span>Nasze pudełko (+2 zł za kg)</span>
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Delivery Option */}
@@ -397,11 +416,19 @@ export default function Order() {
                   type="checkbox"
                   checked={formData.delivery}
                   onChange={(e) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      delivery: e.target.checked
-                    }))
-                    if (!e.target.checked) {
+                    if (e.target.checked) {
+                      // Enable delivery and force box packaging
+                      setFormData(prev => ({
+                        ...prev,
+                        delivery: true,
+                        packaging: 'box'
+                      }))
+                    } else {
+                      // Disable delivery
+                      setFormData(prev => ({
+                        ...prev,
+                        delivery: false
+                      }))
                       setDeliveryValidation(null)
                     }
                   }}
