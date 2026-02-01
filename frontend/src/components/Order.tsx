@@ -345,7 +345,13 @@ export default function Order() {
                   onClick={() => addApple(apple._id)}
                   disabled={!apple.available || selectedApples.some(a => a.apple_id === apple._id)}
                 >
-                  <div className="apple-emoji">🍎</div>
+                  <div className="apple-photo">
+                    {apple.photo_url ? (
+                      <img src={apple.photo_url} alt={apple.name} />
+                    ) : (
+                      <div className="apple-emoji">🍎</div>
+                    )}
+                  </div>
                   <div className="apple-info">
                     <h4>{apple.name}</h4>
                     <p className="description">{apple.description}</p>
