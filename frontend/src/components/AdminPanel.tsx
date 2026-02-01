@@ -95,7 +95,7 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
     const messages = isDelivery ? deliveryMessages : pickupMessages
     
     const message = encodeURIComponent(
-      `Srebrna Sad - Zamówienie #${orderNum}\n\n${messages[status] || getStatusLabel(status)}\n\nTelefon: +48 XXX XXX XXX\ninfo@srebrnasad.pl\n\n🍎 Srebrna Sad`
+      `Srebrna 15 - Zamówienie #${orderNum}\n\n${messages[status] || getStatusLabel(status)}\n\nTelefon: +48 509 518 545\ninfo@srebrnasad.pl\n\n🍎 Srebrna 15`
     )
     // Opens SMS on phone
     window.location.href = `sms:${phone}?body=${message}`

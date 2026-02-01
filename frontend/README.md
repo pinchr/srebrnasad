@@ -1,6 +1,6 @@
-# Srebrna Sad Frontend
+# Srebrna 15 Frontend
 
-React + TypeScript web application for the Srebrna Sad orchard website.
+React + TypeScript web application for the Srebrna 15 orchard website.
 
 ## Tech Stack
 

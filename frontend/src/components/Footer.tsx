@@ -19,7 +19,7 @@ export default function Footer({ setCurrentPage }: FooterProps) {
       <div className="container">
         <div className="footer-content">
           <div className="footer-section">
-            <h4>Srebrna Sad</h4>
+            <h4>Srebrna 15</h4>
             <p>Świeże jabłka z naszego rodzinnego sadu w Srebrnej, Polska</p>
           </div>
           <div className="footer-section">

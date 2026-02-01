@@ -1,6 +1,6 @@
-# Srebrna Sad Backend
+# Srebrna 15 Backend
 
-Python FastAPI backend for the Srebrna Sad orchard website.
+Python FastAPI backend for the Srebrna 15 orchard website.
 
 ## Tech Stack
 

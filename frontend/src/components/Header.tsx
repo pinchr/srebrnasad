@@ -13,8 +13,8 @@ export default function Header({ currentPage, setCurrentPage }: HeaderProps) {
     <header className="header">
       <div className="container">
         <div className="logo">
-          <h1>🍎 Srebrna Sad</h1>
-          <p className="subtitle">Sad w Srebrnej</p>
+          <h1>🍎 Srebrna 15</h1>
+          <p className="subtitle">Sad Jabłoniowy w Srebrnej</p>
         </div>
         <nav className="nav">
           <button 

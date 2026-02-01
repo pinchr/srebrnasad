@@ -482,11 +482,11 @@ export default function Order() {
               </label>
               {totalQuantity < 200 ? (
                 <small className="delivery-hint">
-                  ℹ️ Dostawa dostępna od 200 kg. Brakuje {200 - totalQuantity} kg do dostawy.
+                  ℹ️ Dostawa dostępna przy zamówieniu min. 200 kg. Brakuje {200 - totalQuantity} kg do dostawy.
                 </small>
               ) : (
                 <small className="delivery-hint success">
-                  ✓ Gratulacje! Możesz teraz wybrać dostawę. Dostawa do 25 km od sadu.
+                  ✓ Mamy większe zamówienie! Możesz teraz wybrać dostawę. Dostawa do 50 km od sadu.
                 </small>
               )}
             </div>

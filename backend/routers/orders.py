@@ -9,7 +9,7 @@ import asyncio
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
-# Srebrna Sad location: 52.3138, 20.8445 (Srebrna 15, Nacpolsk)
+# Srebrna 15 location: 52.3138, 20.8445 (Srebrna 15, Nacpolsk)
 ORCHARD_LAT = 52.3138
 ORCHARD_LON = 20.8445
 

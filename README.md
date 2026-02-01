@@ -1,6 +1,6 @@
-# Srebrna Sad - Polish Orchard Website
+# Srebrna 15 - Polish Orchard Website
 
-Simple website for Srebrna Sad apple orchard in Naruszewo, Poland.
+Simple website for Srebrna 15 apple orchard in Naruszewo, Poland.
 
 ## Project Structure
 

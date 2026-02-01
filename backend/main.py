@@ -15,8 +15,8 @@ from routers import contact, upload, content
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Srebrna Sad API",
-    description="API for Srebrna Sad orchard website",
+    title="Srebrna 15 API",
+    description="API for Srebrna 15 orchard website",
     version="0.1.0"
 )
 
@@ -68,7 +68,7 @@ async def root():
         return FileResponse(index_path)
     
     return {
-        "message": "Welcome to Srebrna Sad API",
+        "message": "Welcome to Srebrna 15 API",
         "version": "0.1.0",
         "docs": "/docs"
     }
