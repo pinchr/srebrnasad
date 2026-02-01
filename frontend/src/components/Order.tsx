@@ -98,48 +98,92 @@ export default function Order() {
 
     setGeocoding(true)
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=PL`,
+      // Use Photon (better than Nominatim for small addresses)
+      const geocodeResponse = await fetch(
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(address + ', Polska')}&limit=1&lang=pl`,
         { headers: { 'User-Agent': 'SrebrnaOrchard' } }
       )
-      const results = await response.json()
+      const geocodeData = await geocodeResponse.json()
       
-      if (results.length === 0) {
+      if (!geocodeData.features || geocodeData.features.length === 0) {
         setDeliveryValidation({
           valid: false,
           delivery_fee: 0,
-          error: 'Nie znaleziono adresu. Spróbuj inną nazwę, ulicę lub kod pocztowy.'
+          error: 'Nie znaleziono adresu. Spróbuj inną nazwę lub kod pocztowy.'
         })
         return
       }
 
-      const { lat, lon } = results[0]
-      const totalQuantity = selectedApples.reduce((sum, a) => sum + a.quantity_kg, 0)
+      const coords = geocodeData.features[0].geometry.coordinates
+      const lat = coords[1]
+      const lon = coords[0]
 
-      // Update form data with coordinates
-      setFormData(prev => ({
-        ...prev,
-        delivery_lat: parseFloat(lat),
-        delivery_lon: parseFloat(lon)
-      }))
+      // Calculate real route distance using OSRM (not straight line)
+      const orchardLon = 20.8445
+      const orchardLat = 52.3138
 
-      // Validate with backend
-      if (totalQuantity > 0) {
-        try {
-          const validationResponse = await apiClient.post('/orders/validate-delivery', {
-            total_quantity_kg: totalQuantity,
-            delivery_lat: parseFloat(lat),
-            delivery_lon: parseFloat(lon)
-          })
-          setDeliveryValidation(validationResponse.data)
-        } catch (err) {
-          console.error('Delivery validation failed:', err)
+      try {
+        const routeResponse = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${orchardLon},${orchardLat};${lon},${lat}?overview=false`,
+          { headers: { 'User-Agent': 'SrebrnaOrchard' } }
+        )
+        const routeData = await routeResponse.json()
+
+        if (routeData.routes && routeData.routes.length > 0) {
+          // Distance from OSRM is in meters
+          const distanceKm = Math.round((routeData.routes[0].distance / 1000) * 10) / 10 // Round to 1 decimal
+
+          const totalQuantity = selectedApples.reduce((sum, a) => sum + a.quantity_kg, 0)
+
+          // Update form data with coordinates
+          setFormData(prev => ({
+            ...prev,
+            delivery_lat: lat,
+            delivery_lon: lon
+          }))
+
+          // Validate with backend
+          if (totalQuantity > 0) {
+            try {
+              const validationResponse = await apiClient.post('/orders/validate-delivery', {
+                total_quantity_kg: totalQuantity,
+                delivery_lat: lat,
+                delivery_lon: lon
+              })
+              
+              // Update with real distance from OSRM
+              if (validationResponse.data.valid) {
+                setDeliveryValidation({
+                  ...validationResponse.data,
+                  distance_km: distanceKm
+                })
+              } else {
+                setDeliveryValidation(validationResponse.data)
+              }
+            } catch (err) {
+              console.error('Delivery validation failed:', err)
+              setDeliveryValidation({
+                valid: false,
+                delivery_fee: 0,
+                error: 'Błąd walidacji dostawy. Spróbuj ponownie.'
+              })
+            }
+          }
+        } else {
+          // Fallback if OSRM fails
           setDeliveryValidation({
             valid: false,
             delivery_fee: 0,
-            error: 'Błąd walidacji dostawy. Spróbuj ponownie.'
+            error: 'Nie udało się obliczyć dystansu. Spróbuj ponownie.'
           })
         }
+      } catch (err) {
+        console.error('Route calculation failed:', err)
+        setDeliveryValidation({
+          valid: false,
+          delivery_fee: 0,
+          error: 'Błąd obliczania dystansu. Spróbuj ponownie.'
+        })
       }
     } catch (err) {
       console.error('Geocoding failed:', err)

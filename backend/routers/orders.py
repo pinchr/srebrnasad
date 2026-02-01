@@ -4,7 +4,8 @@ from typing import Optional
 from datetime import datetime
 from bson import ObjectId
 from database import get_db
-import math
+import httpx
+import asyncio
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -12,22 +13,37 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 ORCHARD_LAT = 52.3138
 ORCHARD_LON = 20.8445
 
-def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+async def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
-    Calculate distance between two points on Earth using Haversine formula.
+    Calculate real route distance using OSRM (Open Source Routing Machine).
     Returns distance in kilometers.
+    Falls back to Haversine if OSRM fails.
     """
-    R = 6371  # Earth's radius in kilometers
+    try:
+        async with httpx.AsyncClient() as client:
+            # OSRM expects [lon,lat] format
+            url = f"https://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=false"
+            response = await client.get(url, timeout=10.0)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('routes') and len(data['routes']) > 0:
+                    # Distance from OSRM is in meters
+                    distance_km = data['routes'][0]['distance'] / 1000
+                    return round(distance_km, 1)
+    except Exception as e:
+        print(f"⚠️  OSRM calculation failed: {e}, falling back to Haversine")
     
+    # Fallback: Haversine (approximate)
+    import math
+    R = 6371  # Earth's radius in kilometers
     lat1_rad = math.radians(lat1)
     lat2_rad = math.radians(lat2)
     delta_lat = math.radians(lat2 - lat1)
     delta_lon = math.radians(lon2 - lon1)
-    
     a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
     c = 2 * math.asin(math.sqrt(a))
-    
-    return R * c
+    return round(R * c, 1)
 
 class AppleItem(BaseModel):
     """Apple item in order"""
@@ -98,14 +114,14 @@ async def validate_delivery(validation: DeliveryValidation):
             error="Dostawa dostępna od 200 kg jabłek"
         )
     
-    # Calculate distance
-    distance = haversine_distance(ORCHARD_LAT, ORCHARD_LON, validation.delivery_lat, validation.delivery_lon)
+    # Calculate distance using OSRM
+    distance = await calculate_distance(ORCHARD_LAT, ORCHARD_LON, validation.delivery_lat, validation.delivery_lon)
     
     # Check maximum distance
     if distance > 25:
         return DeliveryValidationResponse(
             valid=False,
-            distance_km=round(distance, 2),
+            distance_km=distance,
             delivery_fee=0,
             error=f"Adres jest za daleko ({distance:.1f} km). Maksymalna odległość to 25 km."
         )
@@ -113,7 +129,7 @@ async def validate_delivery(validation: DeliveryValidation):
     # All good
     return DeliveryValidationResponse(
         valid=True,
-        distance_km=round(distance, 2),
+        distance_km=distance,
         delivery_fee=25.0,
         error=None
     )
@@ -220,8 +236,8 @@ async def create_order(order: OrderCreate):
                     detail="Podaj adres dostawy i współrzędne"
                 )
             
-            # Calculate distance
-            delivery_distance = haversine_distance(ORCHARD_LAT, ORCHARD_LON, order.delivery_lat, order.delivery_lon)
+            # Calculate distance using OSRM
+            delivery_distance = await calculate_distance(ORCHARD_LAT, ORCHARD_LON, order.delivery_lat, order.delivery_lon)
             
             if delivery_distance > 25:
                 raise HTTPException(
