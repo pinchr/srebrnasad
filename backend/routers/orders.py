@@ -19,8 +19,7 @@ class OrderCreate(BaseModel):
     customer_name: str = Field(..., min_length=1, max_length=100)
     customer_email: Optional[str] = None
     customer_phone: str = Field(..., min_length=1, max_length=20)
-    pickup_date: str
-    pickup_time: str
+    pickup_datetime: str  # Format: "2026-02-15T14:30"
 
 class OrderResponse(BaseModel):
     """Order response"""
@@ -61,6 +60,11 @@ async def create_order(order: OrderCreate):
                 detail="Ilość musi wynosić co najmniej 10 kg, zwiększana co 5 kg"
             )
     
+    # Parse pickup_datetime to date and time
+    pickup_dt = datetime.fromisoformat(order.pickup_datetime)
+    pickup_date = pickup_dt.strftime("%Y-%m-%d")
+    pickup_time = pickup_dt.strftime("%H:%M")
+    
     if db is None:
         # Development mode - return success
         total_qty = sum(a.quantity_kg for a in order.apples)
@@ -71,8 +75,8 @@ async def create_order(order: OrderCreate):
             customer_name=order.customer_name,
             customer_email=order.customer_email,
             customer_phone=order.customer_phone,
-            pickup_date=order.pickup_date,
-            pickup_time=order.pickup_time,
+            pickup_date=pickup_date,
+            pickup_time=pickup_time,
             status="pending",
             total_quantity_kg=total_qty,
             total_price=0.0,
@@ -116,8 +120,8 @@ async def create_order(order: OrderCreate):
             "customer_name": order.customer_name,
             "customer_email": order.customer_email,
             "customer_phone": order.customer_phone,
-            "pickup_date": order.pickup_date,
-            "pickup_time": order.pickup_time,
+            "pickup_date": pickup_date,
+            "pickup_time": pickup_time,
             "status": "pending",  # pending, confirmed, ready, picked_up, cancelled
             "total_quantity_kg": total_quantity,
             "total_price": total_price,
@@ -136,8 +140,8 @@ async def create_order(order: OrderCreate):
             customer_name=order.customer_name,
             customer_email=order.customer_email,
             customer_phone=order.customer_phone,
-            pickup_date=order.pickup_date,
-            pickup_time=order.pickup_time,
+            pickup_date=pickup_date,
+            pickup_time=pickup_time,
             status="pending",
             total_quantity_kg=total_quantity,
             total_price=total_price,

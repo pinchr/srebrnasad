@@ -88,7 +88,7 @@ async def get_apple(apple_id: str):
             detail=f"Failed to fetch apple: {str(e)}"
         )
 
-@router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_apple(apple: AppleCreate):
     """
     Create new apple variety (admin only).
@@ -165,6 +165,7 @@ async def update_apple(apple_id: str, apple: AppleUpdate):
         )
 
 @router.delete("/{apple_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{apple_id}/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_apple(apple_id: str):
     """
     Delete apple variety (admin only).

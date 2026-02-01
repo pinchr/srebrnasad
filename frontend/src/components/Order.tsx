@@ -22,8 +22,7 @@ interface OrderFormData {
   customer_name: string
   customer_email: string
   customer_phone: string
-  pickup_date: string
-  pickup_time: string
+  pickup_datetime: string
 }
 
 export default function Order() {
@@ -35,14 +34,12 @@ export default function Order() {
     customer_name: '',
     customer_email: '',
     customer_phone: '',
-    pickup_date: '',
-    pickup_time: '',
+    pickup_datetime: '',
   })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
-  const [availableTimes, setAvailableTimes] = useState<string[]>([])
 
   useEffect(() => {
     fetchApples()
@@ -55,11 +52,6 @@ export default function Order() {
       apples: selectedApples
     }))
   }, [selectedApples])
-
-  useEffect(() => {
-    // Calculate available times based on order size
-    updateAvailableTimes()
-  }, [formData.pickup_date, selectedApples])
 
   const fetchApples = async () => {
     try {
@@ -98,20 +90,6 @@ export default function Order() {
         a.apple_id === appleId ? { ...a, quantity_kg: quantity } : a
       )
     )
-  }
-
-  const updateAvailableTimes = () => {
-    const times: string[] = []
-
-    // Generate available times
-    for (let hour = 8; hour <= 18; hour++) {
-      for (let min of [0, 30]) {
-        const time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`
-        times.push(time)
-      }
-    }
-
-    setAvailableTimes(times)
   }
 
   const getMinPickupDate = () => {
@@ -156,8 +134,7 @@ export default function Order() {
         customer_name: '',
         customer_email: '',
         customer_phone: '',
-        pickup_date: '',
-        pickup_time: '',
+        pickup_datetime: '',
       })
       setTimeout(() => setSubmitted(false), 5000)
     } catch (err) {
@@ -377,35 +354,53 @@ export default function Order() {
 
             {/* Pickup Date & Time */}
             <div className="form-group">
-              <label htmlFor="pickup_date">Data odbioru *</label>
-              <input
-                type="date"
-                id="pickup_date"
-                name="pickup_date"
-                value={formData.pickup_date}
-                onChange={handleChange}
-                required
-                min={getMinPickupDate()}
-              />
+              <label>Data i godzina odbioru *</label>
+              <div className="datetime-inputs">
+                <div className="date-input-wrapper">
+                  <label htmlFor="pickup_date" className="sublabel">Data *</label>
+                  <input
+                    type="date"
+                    id="pickup_date"
+                    name="pickup_date"
+                    value={formData.pickup_datetime.split('T')[0] || ''}
+                    onChange={(e) => {
+                      const date = e.target.value
+                      const time = formData.pickup_datetime.split('T')[1] || '08:00'
+                      setFormData(prev => ({
+                        ...prev,
+                        pickup_datetime: date && time ? `${date}T${time}` : ''
+                      }))
+                    }}
+                    required
+                    min={getMinPickupDate()}
+                  />
+                </div>
+                <div className="time-select-wrapper">
+                  <label htmlFor="pickup_time" className="sublabel">Godzina *</label>
+                  <select
+                    id="pickup_time"
+                    name="pickup_time"
+                    value={formData.pickup_datetime.split('T')[1] || ''}
+                    onChange={(e) => {
+                      const date = formData.pickup_datetime.split('T')[0] || ''
+                      const time = e.target.value
+                      setFormData(prev => ({
+                        ...prev,
+                        pickup_datetime: date && time ? `${date}T${time}` : ''
+                      }))
+                    }}
+                    required
+                  >
+                    <option value="">Wybierz godzinę</option>
+                    {['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'].map(time => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               {totalQuantity > 30 && (
                 <small>⏰ Duże zamówienie - minimum {Math.ceil((totalQuantity - 30) / 20 + 1)} dnia z wyprzedzeniem</small>
               )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="pickup_time">Godzina odbioru *</label>
-              <select
-                id="pickup_time"
-                name="pickup_time"
-                value={formData.pickup_time}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Wybierz godzinę</option>
-                {availableTimes.map(time => (
-                  <option key={time} value={time}>{time}</option>
-                ))}
-              </select>
             </div>
 
             <button 

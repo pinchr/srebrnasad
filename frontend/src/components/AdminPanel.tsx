@@ -60,7 +60,7 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId)
     try {
-      await apiClient.put(`/orders/${orderId}/status/`, { new_status: newStatus })
+      await apiClient.put(`/orders/${orderId}/status`, { new_status: newStatus })
       fetchOrders()
     } catch (err) {
       console.error('Failed to update order status:', err)

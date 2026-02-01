@@ -18,7 +18,7 @@ def allowed_file(filename: str) -> bool:
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@router.post("/")
+@router.post("")
 async def upload_file(file: UploadFile = File(...)):
     """
     Upload an image file.

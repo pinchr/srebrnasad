@@ -192,8 +192,8 @@ async def save_gallery_content(content: GalleryContent):
             detail=f"Błąd przy zapisywaniu: {str(e)}"
         )
 
+
 @router.get("/gallery")
-@router.get("/gallery/")
 async def get_gallery_content():
     """Get gallery content"""
     db = get_db()
