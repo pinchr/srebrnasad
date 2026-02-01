@@ -78,7 +78,7 @@ async def root():
 async def serve_spa(path_name: str):
     """Serve SPA index.html for all non-API routes"""
     # Skip /api routes - let them be handled by routers above
-    if path_name.startswith("api"):
+    if path_name.startswith("api") or path_name.startswith("uploads"):
         raise HTTPException(status_code=404, detail="Not found")
     
     frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"

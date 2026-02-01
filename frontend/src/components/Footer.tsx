@@ -1,7 +1,18 @@
 import './Footer.css'
 
-export default function Footer() {
+interface FooterProps {
+  setCurrentPage?: (page: 'home' | 'gallery' | 'contact' | 'order' | 'admin') => void
+}
+
+export default function Footer({ setCurrentPage }: FooterProps) {
   const currentYear = new Date().getFullYear()
+
+  const handleLinkClick = (page: 'home' | 'gallery' | 'contact' | 'order' | 'admin') => {
+    if (setCurrentPage) {
+      setCurrentPage(page)
+      window.scrollTo(0, 0)
+    }
+  }
 
   return (
     <footer className="footer">
@@ -14,9 +25,9 @@ export default function Footer() {
           <div className="footer-section">
             <h4>Szybkie Linki</h4>
             <ul>
-              <li><a href="#home">Strona główna</a></li>
-              <li><a href="#gallery">Galeria</a></li>
-              <li><a href="#contact">Kontakt</a></li>
+              <li><button onClick={() => handleLinkClick('home')} className="footer-link">Strona główna</button></li>
+              <li><button onClick={() => handleLinkClick('gallery')} className="footer-link">Galeria</button></li>
+              <li><button onClick={() => handleLinkClick('contact')} className="footer-link">Kontakt</button></li>
             </ul>
           </div>
           <div className="footer-section">

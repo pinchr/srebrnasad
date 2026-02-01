@@ -28,7 +28,7 @@ function App() {
       {currentPage === 'contact' && <Contact />}
       {currentPage === 'admin' && <AdminPanel setCurrentPage={setCurrentPage} />}
       
-      {currentPage !== 'admin' && <Footer />}
+      {currentPage !== 'admin' && <Footer setCurrentPage={setCurrentPage} />}
     </div>
   )
 }

@@ -34,7 +34,7 @@ export default function Contact() {
     setError('')
 
     try {
-      await axios.post('/api/contact', formData)
+      await axios.post('/api/contact/', formData)
       setSubmitted(true)
       setFormData({ name: '', email: '', phone: '', message: '' })
       setTimeout(() => setSubmitted(false), 5000)

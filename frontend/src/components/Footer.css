@@ -85,20 +85,28 @@
   margin-bottom: 0.5rem;
 }
 
-.footer-section a {
+.footer-section a,
+.footer-section .footer-link {
   color: #c8e6c9;
   text-decoration: none;
   transition: color 0.3s ease;
   font-size: 0.95rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
 }
 
 @media (max-width: 480px) {
-  .footer-section a {
+  .footer-section a,
+  .footer-section .footer-link {
     font-size: 0.9rem;
   }
 }
 
-.footer-section a:hover {
+.footer-section a:hover,
+.footer-section .footer-link:hover {
   color: white;
 }
 
