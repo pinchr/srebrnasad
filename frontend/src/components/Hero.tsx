@@ -11,7 +11,7 @@ interface HeroData {
 }
 
 export default function Hero() {
-  const { isAdminLoggedIn, isEditMode, setIsEditMode } = useAdmin()
+  const { isAdminLoggedIn } = useAdmin()
   const [isLocalEditMode, setIsLocalEditMode] = useState(false)
   const [heroData, setHeroData] = useState<HeroData>({
     title: 'Witaj w Srebrnej Sadzie',

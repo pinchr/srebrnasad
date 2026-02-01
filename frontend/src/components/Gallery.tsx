@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import axios from 'axios'
+import { useState, useEffect } from 'react'
+import apiClient from '../axiosConfig'
 import { useAdmin } from '../AdminContext'
 import './Gallery.css'
 
@@ -25,23 +25,56 @@ export default function Gallery() {
   const [message, setMessage] = useState('')
   const [uploadingImage, setUploadingImage] = useState<string | null>(null)
 
+  useEffect(() => {
+    const loadGallery = async () => {
+      try {
+        const response = await apiClient.get('/content/gallery')
+        if (response.data.images && response.data.images.length > 0) {
+          setImages(response.data.images)
+        }
+      } catch (err) {
+        console.error('Error loading gallery:', err)
+      }
+    }
+    
+    loadGallery()
+  }, [])
+
   const handleImageChange = async (id: string, file: File) => {
     setUploadingImage(id)
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const response = await axios.post('/api/upload', formData, {
+      
+      console.log('Uploading file:', { name: file.name, size: file.size, type: file.type })
+      
+      const response = await apiClient.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
+      
+      console.log('Upload response:', response.data)
       
       setImages(images.map(img => 
         img.id === id ? { ...img, photo_url: response.data.url } : img
       ))
       setMessage('✓ Zdjęcie wgrane')
       setTimeout(() => setMessage(''), 2000)
-    } catch (err) {
-      setMessage('✗ Błąd przy wgrywaniu')
-      console.error(err)
+    } catch (err: any) {
+      let errorMsg = '✗ Błąd przy wgrywaniu'
+      if (err.response?.data?.detail) {
+        errorMsg = `✗ ${err.response.data.detail}`
+      } else if (err.message) {
+        errorMsg = `✗ ${err.message}`
+      }
+      setMessage(errorMsg)
+      console.error('Upload error:', {
+        status: err.response?.status,
+        detail: err.response?.data?.detail,
+        message: err.message,
+        file: file.name,
+        size: file.size,
+        type: file.type
+      })
     } finally {
       setUploadingImage(null)
     }
@@ -56,10 +89,16 @@ export default function Gallery() {
   const saveGallery = async () => {
     try {
       setMessage('Zapisywanie...')
-      await axios.post('/api/content/gallery', { images })
+      await apiClient.post('/content/gallery', { images })
       setIsEditMode(false)
       setMessage('✓ Galeria zapisana')
       setTimeout(() => setMessage(''), 2000)
+      
+      // Reload gallery data to ensure we're showing saved content
+      const response = await apiClient.get('/content/gallery')
+      if (response.data.images && response.data.images.length > 0) {
+        setImages(response.data.images)
+      }
     } catch (err) {
       setMessage('✗ Błąd przy zapisywaniu')
       console.error(err)

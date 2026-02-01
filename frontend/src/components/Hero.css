@@ -183,22 +183,48 @@
   background-color: #757575;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .hero {
-    padding: 50px 20px;
+    padding: 60px 20px;
   }
 
   .hero-content h2 {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 
   .hero-content p {
-    font-size: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .hero-content .description {
+    font-size: 0.95rem;
+    margin: 1rem auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 40px 16px;
+  }
+
+  .hero-content h2 {
+    font-size: 1.6rem;
+  }
+
+  .hero-content p {
+    font-size: 0.95rem;
+  }
+
+  .hero-content .description {
+    font-size: 0.85rem;
+    margin: 0.75rem auto;
   }
 
   .edit-btn {
     width: 45px;
     height: 45px;
     font-size: 1.2rem;
+    top: 16px;
+    right: 16px;
   }
 }

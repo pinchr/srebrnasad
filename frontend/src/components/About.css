@@ -4,6 +4,18 @@
   position: relative;
 }
 
+@media (max-width: 768px) {
+  .about {
+    padding: 40px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about {
+    padding: 30px 12px;
+  }
+}
+
 .about .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -11,14 +23,52 @@
 
 .about h2 {
   text-align: center;
-  font-size: 2.5rem;
   margin-bottom: 3rem;
+}
+
+@media (min-width: 769px) {
+  .about h2 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .about h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 .about-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
+}
+
+@media (min-width: 769px) {
+  .about-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .about-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
 .about-card {
@@ -29,14 +79,49 @@
   transition: transform 0.3s ease;
 }
 
+@media (max-width: 768px) {
+  .about-card {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-card {
+    padding: 1.25rem;
+  }
+}
+
 .about-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+@media (max-width: 480px) {
+  .about-card:hover {
+    transform: none;
+  }
+}
+
 .about-card h3 {
-  font-size: 1.5rem;
   margin-bottom: 1rem;
+}
+
+@media (min-width: 769px) {
+  .about-card h3 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-card h3 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-card h3 {
+    font-size: 1.1rem;
+  }
 }
 
 .about-card p {
