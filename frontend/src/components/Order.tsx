@@ -100,8 +100,7 @@ export default function Order() {
     try {
       // Use Nominatim OSM (reliable for Polish addresses)
       const geocodeResponse = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=PL&limit=1&addressdetails=1`,
-        { headers: { 'User-Agent': 'SrebrnaOrchard' } }
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=PL&limit=1&addressdetails=1`
       )
       const geocodeData = await geocodeResponse.json()
       
@@ -123,8 +122,7 @@ export default function Order() {
 
       try {
         const routeResponse = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${orchardLon},${orchardLat};${lon},${lat}?overview=false`,
-          { headers: { 'User-Agent': 'SrebrnaOrchard' } }
+          `https://router.project-osrm.org/route/v1/driving/${orchardLon},${orchardLat};${lon},${lat}?overview=false`
         )
         const routeData = await routeResponse.json()
 
