@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import apiClient from '../axiosConfig'
 import './AdminContent.css'
 
 interface Apple {
@@ -38,7 +38,7 @@ export default function AdminContent({ onClose }: AdminContentProps) {
 
   const fetchApples = async () => {
     try {
-      const response = await axios.get('/api/apples')
+      const response = await apiClient.get('/apples/')
       setApples(response.data.apples)
       setLoading(false)
     } catch (err) {
@@ -70,7 +70,7 @@ export default function AdminContent({ onClose }: AdminContentProps) {
       if (photoFile) {
         const formDataWithPhoto = new FormData()
         formDataWithPhoto.append('file', photoFile)
-        const photoResponse = await axios.post('/api/upload', formDataWithPhoto, {
+        const photoResponse = await apiClient.post('/upload', formDataWithPhoto, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         photoUrl = photoResponse.data.url
@@ -85,10 +85,10 @@ export default function AdminContent({ onClose }: AdminContentProps) {
       }
 
       if (editingApple) {
-        await axios.put(`/api/apples/${editingApple._id}`, appleData)
+        await apiClient.put(`/apples/${editingApple._id}`, appleData)
         setMessage('✓ Odmiana zaktualizowana')
       } else {
-        await axios.post('/api/apples', appleData)
+        await apiClient.post('/apples', appleData)
         setMessage('✓ Odmiana dodana')
       }
 
@@ -110,7 +110,7 @@ export default function AdminContent({ onClose }: AdminContentProps) {
     if (!window.confirm('Na pewno chcesz usunąć tę odmianę?')) return
     
     try {
-      await axios.delete(`/api/apples/${id}`)
+      await apiClient.delete(`/apples/${id}`)
       setMessage('✓ Odmiana usunięta')
       setTimeout(() => {
         fetchApples()

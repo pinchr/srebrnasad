@@ -2,6 +2,7 @@ import os
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -47,6 +48,37 @@ def init_db():
         db["apples"].create_index("name")
         db["apples"].create_index("available")
         print("✓ Created 'apples' collection")
+    
+    # Seed default apples if collection is empty
+    if db["apples"].count_documents({}) == 0:
+        default_apples = [
+            {
+                "name": "Gala",
+                "description": "Słodkie i socziste",
+                "price": 4.50,
+                "available": True,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            },
+            {
+                "name": "Jonagold",
+                "description": "Mieszanka słodkości i kwaskości",
+                "price": 5.00,
+                "available": True,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            },
+            {
+                "name": "Fuji",
+                "description": "Słodkie z nutą kardamonu",
+                "price": 5.50,
+                "available": True,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            },
+        ]
+        db["apples"].insert_many(default_apples)
+        print("✓ Seeded default apple varieties")
     
     if "orders" not in db.list_collection_names():
         db.create_collection("orders")

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import apiClient from '../axiosConfig'
 import AdminContent from './AdminContent'
 import './AdminPanel.css'
 
 interface AdminPanelProps {
-  setCurrentPage: (page: string) => void
+  setCurrentPage: React.Dispatch<React.SetStateAction<'home' | 'gallery' | 'contact' | 'order' | 'admin'>>
 }
 
 interface OrderItem {
@@ -36,7 +36,6 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [showContentModal, setShowContentModal] = useState(false)
 
@@ -47,9 +46,9 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
   const fetchOrders = async () => {
     try {
       const url = statusFilter === 'all' 
-        ? '/api/orders' 
-        : `/api/orders?status_filter=${statusFilter}`
-      const response = await axios.get(url)
+        ? '/orders/' 
+        : `/orders/?status_filter=${statusFilter}`
+      const response = await apiClient.get(url)
       setOrders(response.data.orders || [])
       setLoading(false)
     } catch (err) {
@@ -61,7 +60,7 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     setUpdatingStatus(orderId)
     try {
-      await axios.put(`/api/orders/${orderId}/status`, { new_status: newStatus })
+      await apiClient.put(`/orders/${orderId}/status/`, { new_status: newStatus })
       fetchOrders()
     } catch (err) {
       console.error('Failed to update order status:', err)
@@ -74,7 +73,7 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
     const statusMessages: Record<string, string> = {
       pending: 'Twoje zamówienie zostało przyjęte i oczekuje na potwierdzenie.',
       confirmed: 'Twoje zamówienie zostało potwierdzone! Przygotowujemy jabłka.',
-      ready: 'Twoje zamówienie jest gotowe do odbioru! Zapraszamy do Srebrnej 15, Naruszewo.',
+      ready: 'Twoje zamówienie jest gotowe do odbioru!\n\nZapraszamy do Srebrnej 15, 09-162 Nacpolsk\n\n📍 Mapa: https://maps.google.com/?q=Srebrna+15,+09-162+Nacpolsk',
       picked_up: 'Dziękujemy za odbiór! Zapraszamy ponownie! 🍎',
       cancelled: 'Twoje zamówienie zostało anulowane.'
     }

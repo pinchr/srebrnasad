@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import apiClient from '../axiosConfig'
 import './Order.css'
 
 interface Apple {
@@ -63,7 +63,7 @@ export default function Order() {
 
   const fetchApples = async () => {
     try {
-      const response = await axios.get('/api/apples')
+      const response = await apiClient.get('/apples/')
       setApples(response.data.apples)
       setLoading(false)
     } catch (err) {
@@ -101,13 +101,7 @@ export default function Order() {
   }
 
   const updateAvailableTimes = () => {
-    const totalQuantity = selectedApples.reduce((sum, a) => sum + a.quantity_kg, 0)
     const times: string[] = []
-
-    // More time needed for larger orders
-    let minHourOffset = 1 // 1 hour minimum
-    if (totalQuantity > 50) minHourOffset = 3
-    else if (totalQuantity > 30) minHourOffset = 2
 
     // Generate available times
     for (let hour = 8; hour <= 18; hour++) {
@@ -153,7 +147,7 @@ export default function Order() {
     }
 
     try {
-      await axios.post('/api/orders', formData)
+      await apiClient.post('/orders/', formData)
       setSubmitted(true)
       setSelectedApples([])
       setFormData({
