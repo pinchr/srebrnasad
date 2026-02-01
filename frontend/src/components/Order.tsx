@@ -54,7 +54,6 @@ export default function Order() {
     delivery_fee: number
     error?: string
   } | null>(null)
-  const [validatingDelivery, setValidatingDelivery] = useState(false)
   const [geocoding, setGeocoding] = useState(false)
 
   useEffect(() => {
@@ -89,14 +88,18 @@ export default function Order() {
 
   const geocodeAddress = async (address: string) => {
     if (!address.trim()) {
-      setDeliveryValidation(null)
+      setDeliveryValidation({
+        valid: false,
+        delivery_fee: 0,
+        error: 'Podaj adres'
+      })
       return
     }
 
     setGeocoding(true)
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=PL`,
         { headers: { 'User-Agent': 'SrebrnaOrchard' } }
       )
       const results = await response.json()
@@ -105,7 +108,7 @@ export default function Order() {
         setDeliveryValidation({
           valid: false,
           delivery_fee: 0,
-          error: 'Nie znaleziono adresu. Spróbuj inną nazwę lub kodeks pocztowy.'
+          error: 'Nie znaleziono adresu. Spróbuj inną nazwę, ulicę lub kod pocztowy.'
         })
         return
       }
@@ -122,7 +125,6 @@ export default function Order() {
 
       // Validate with backend
       if (totalQuantity > 0) {
-        setValidatingDelivery(true)
         try {
           const validationResponse = await apiClient.post('/orders/validate-delivery', {
             total_quantity_kg: totalQuantity,
@@ -137,8 +139,6 @@ export default function Order() {
             delivery_fee: 0,
             error: 'Błąd walidacji dostawy. Spróbuj ponownie.'
           })
-        } finally {
-          setValidatingDelivery(false)
         }
       }
     } catch (err) {
@@ -151,21 +151,6 @@ export default function Order() {
     } finally {
       setGeocoding(false)
     }
-  }
-
-  // Debounce geocoding
-  const handleDeliveryAddressChange = (address: string) => {
-    setFormData(prev => ({
-      ...prev,
-      delivery_address: address
-    }))
-    
-    // Debounce geocoding
-    const timer = setTimeout(() => {
-      geocodeAddress(address)
-    }, 500)
-
-    return () => clearTimeout(timer)
   }
 
   const addApple = (appleId: string) => {
@@ -223,8 +208,13 @@ export default function Order() {
 
     // Validate delivery
     if (formData.delivery) {
+      if (!formData.delivery_address.trim()) {
+        setError('Podaj adres dostawy')
+        setSubmitting(false)
+        return
+      }
       if (!deliveryValidation?.valid) {
-        setError(deliveryValidation?.error || 'Dostawa niedostępna dla tego adresu')
+        setError(deliveryValidation?.error || 'Sprawdź dostępność dostawy dla tego adresu')
         setSubmitting(false)
         return
       }
@@ -427,16 +417,29 @@ export default function Order() {
             {formData.delivery && (
               <div className="form-group">
                 <label htmlFor="delivery_address">Adres dostawy *</label>
-                <input
-                  type="text"
-                  id="delivery_address"
-                  value={formData.delivery_address}
-                  onChange={(e) => handleDeliveryAddressChange(e.target.value)}
-                  required={formData.delivery}
-                  placeholder="Adres, ulica, numer domu..."
-                  disabled={geocoding || validatingDelivery}
-                />
-                {geocoding && <small>🔍 Wyszukuję adres...</small>}
+                <div className="delivery-address-group">
+                  <input
+                    type="text"
+                    id="delivery_address"
+                    value={formData.delivery_address}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      delivery_address: e.target.value
+                    }))}
+                    required={formData.delivery}
+                    placeholder="Ulica, numer domu, kod pocztowy..."
+                    disabled={geocoding}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => geocodeAddress(formData.delivery_address)}
+                    disabled={geocoding || !formData.delivery_address.trim()}
+                    className="check-distance-btn"
+                  >
+                    {geocoding ? '🔍...' : '🔍 Sprawdź'}
+                  </button>
+                </div>
+                <small>Podaj ulicę, numer domu i kod pocztowy, np. "Płońska 12, 09-100 Płońsk"</small>
                 {deliveryValidation && (
                   <>
                     {deliveryValidation.valid ? (
