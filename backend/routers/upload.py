@@ -26,19 +26,19 @@ async def upload_file(file: UploadFile = File(...)):
     Supported formats: jpg, jpeg, png, gif, webp
     Max size: 5MB
     """
-    if not file.filename:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Nazwa pliku jest wymagana"
-        )
-    
-    if not allowed_file(file.filename):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Nieobsługiwany format pliku. Obsługiwane: jpg, jpeg, png, gif, webp"
-        )
-    
     try:
+        if not file.filename:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Nazwa pliku jest wymagana"
+            )
+        
+        if not allowed_file(file.filename):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Nieobsługiwany format pliku. Obsługiwane: jpg, jpeg, png, gif, webp"
+            )
+        
         # Read file
         contents = await file.read()
         
@@ -53,6 +53,9 @@ async def upload_file(file: UploadFile = File(...)):
         file_extension = file.filename.rsplit('.', 1)[1].lower()
         unique_filename = f"{uuid.uuid4()}.{file_extension}"
         file_path = os.path.join(UPLOAD_DIR, unique_filename)
+        
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(file_path) or UPLOAD_DIR, exist_ok=True)
         
         # Save file
         with open(file_path, "wb") as f:
@@ -71,6 +74,7 @@ async def upload_file(file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Upload error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Błąd przy wgrywaniu pliku: {str(e)}"

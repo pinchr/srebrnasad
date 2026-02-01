@@ -151,3 +151,74 @@ async def get_about_content():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Błąd przy pobieraniu zawartości: {str(e)}"
         )
+
+class GalleryImage(BaseModel):
+    """Gallery image"""
+    id: str
+    title: str
+    description: str
+    photo_url: Optional[str] = None
+    category: str
+
+class GalleryContent(BaseModel):
+    """Gallery content"""
+    images: list[dict]
+
+@router.post("/gallery")
+async def save_gallery_content(content: GalleryContent):
+    """Save gallery content"""
+    db = get_db()
+    
+    if db is None:
+        return {"message": "✓ Content saved (dev mode)"}
+    
+    try:
+        db["site_content"].update_one(
+            {"section": "gallery"},
+            {
+                "$set": {
+                    "section": "gallery",
+                    "images": content.images,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        return {"message": "✓ Galeria zapisana"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Błąd przy zapisywaniu: {str(e)}"
+        )
+
+@router.get("/gallery")
+async def get_gallery_content():
+    """Get gallery content"""
+    db = get_db()
+    
+    default_gallery = {
+        "images": [
+            {"id": "1", "title": "Widok Sadu", "description": "Piękny widok na nasz sad", "category": "orchard", "photo_url": None},
+            {"id": "2", "title": "Świeże Jabłka", "description": "Świeżo zebrane jabłka", "category": "apples", "photo_url": None},
+            {"id": "3", "title": "Czas Zbioru", "description": "Zbieranie jabłek", "category": "harvest", "photo_url": None},
+        ]
+    }
+    
+    if db is None:
+        return default_gallery
+    
+    try:
+        content = db["site_content"].find_one({"section": "gallery"})
+        
+        if not content:
+            return default_gallery
+        
+        del content["_id"]
+        del content["section"]
+        return content
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Błąd przy pobieraniu zawartości: {str(e)}"
+        )
