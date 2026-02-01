@@ -54,16 +54,16 @@ export default function Contact() {
           <div className="contact-info">
             <h3>Skontaktuj się z nami</h3>
             <p>
-              Masz pytania o nasze jabłka lub chcesz złożyć zamówienie? 
+              Masz pytania o nasze jabłka lub chcesz złożyć większe zamówienie? 
               Skontaktuj się z nami poprzez formularz lub zadzwoń bezpośrednio.
             </p>
             <div className="info-item">
               <span className="label">📍 Adres:</span>
-              <p>Srebrna 15, Naruszewo, Polska</p>
+              <p>Srebrna 15, 09-162 Nacpolsk, Polska</p>
             </div>
             <div className="info-item">
               <span className="label">📞 Telefon:</span>
-              <p>+48 XXX XXX XXX</p>
+              <p>+48 509518545</p>
             </div>
             <div className="info-item">
               <span className="label">✉️ Email:</span>

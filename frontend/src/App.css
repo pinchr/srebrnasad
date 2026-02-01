@@ -25,21 +25,37 @@ button {
   cursor: pointer;
   border: none;
   border-radius: 4px;
-  padding: 10px 20px;
+  padding: 12px 24px;
   font-size: 1rem;
   transition: all 0.3s ease;
+  min-height: 44px;
 }
 
 button:hover {
   opacity: 0.9;
 }
 
+@media (max-width: 480px) {
+  button {
+    min-height: 48px;
+    font-size: 0.95rem;
+  }
+}
+
 input, textarea {
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-family: inherit;
   font-size: 1rem;
+  min-height: 44px;
+}
+
+@media (max-width: 480px) {
+  input, textarea {
+    font-size: 16px;
+    min-height: 48px;
+  }
 }
 
 input:focus, textarea:focus {

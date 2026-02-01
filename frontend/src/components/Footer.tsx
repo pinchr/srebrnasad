@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="footer-content">
           <div className="footer-section">
             <h4>Srebrna Sad</h4>
-            <p>Świeże jabłka z naszego rodzinnego sadu w Naruszewo, Polska</p>
+            <p>Świeże jabłka z naszego rodzinnego sadu w Srebrnej, Polska</p>
           </div>
           <div className="footer-section">
             <h4>Szybkie Linki</h4>
@@ -21,13 +21,13 @@ export default function Footer() {
           </div>
           <div className="footer-section">
             <h4>Kontakt</h4>
-            <p>Srebrna 15, Naruszewo, Polska</p>
-            <p>+48 XXX XXX XXX</p>
+            <p>Srebrna 15, 09-162 Nacpolsk, Polska</p>
+            <p>+48 509 518 545</p>
             <p>info@srebrnasad.pl</p>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; {currentYear} CzyzbySoft. Wszelkie prawa zastrzeżone.</p>
+          <p>&copy; {currentYear} CzyzSoft. Wszelkie prawa zastrzeżone.</p>
         </div>
       </div>
     </footer>
