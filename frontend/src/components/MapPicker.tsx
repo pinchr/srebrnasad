@@ -15,9 +15,9 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
   const [isMapOpen, setIsMapOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const orchardLat = 52.3138
-  const orchardLon = 20.8445
-
+  const orchardLat = 52.49112601595363
+  const orchardLon = 20.32534254089926
+ 
   // Initialize map when opened
   useEffect(() => {
     if (!isMapOpen || !mapContainer.current) return
@@ -64,23 +64,24 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
       maxZoom: 19,
     }).addTo(map.current)
 
-    // Add orchard marker
-    L.circleMarker([orchardLat, orchardLon], {
-      radius: 8,
-      fillColor: '#4caf50',
-      color: '#2c5f2d',
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0.8
+    // Add orchard marker with apple emoji
+    L.marker([orchardLat, orchardLon], {
+      icon: L.divIcon({
+        html: '<div style="font-size: 2.5rem; text-shadow: 2px 2px 2px rgba(0,0,0,0.3);">🍎</div>',
+        iconSize: [50, 50],
+        iconAnchor: [25, 50],
+        popupAnchor: [0, -50],
+        className: 'apple-marker'
+      })
     })
       .addTo(map.current)
-      .bindPopup('🍎 Srebrna 15, Nacpolsk (Sad)')
+      .bindPopup('🍎 Srebrna 15 (Sad)')
 
-    // Add user marker if coordinates exist
+    // Add user marker if coordinates exist (red pin)
     if (lat && lon) {
       marker.current = L.marker([lat, lon], {
         icon: L.icon({
-          iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzIyNjhkMCIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyYzAgNSAzLjY0IDkuMjcgOC4zIDkuOTdWMjJjMCAwIDYgLjEgNiAwdjBjNC42NyAwIDEwLTIuMzMgMTAtMTBzLTUuMzMtMTAtMTAtMXptMCA1Yy0yLjc2IDAtNSAyLjI0LTUgNXMyLjI0IDUgNSA1IDUtMi4yNCA1LTUtMi4yNC01LTUtNXoiLz48L3N2Zz4=',
+          iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2VmNDMzNiIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyYzAgNSAzLjY0IDkuMjcgOC4zIDkuOTdWMjJjMCAwIDYgLjEgNiAwdjBjNC42NyAwIDEwLTIuMzMgMTAtMTBzLTUuMzMtMTAtMTAtMXptMCA1Yy0yLjc2IDAtNSAyLjI0LTUgNXMyLjI0IDUgNSA1IDUtMi4yNCA1LTUtMi4yNC01LTUtNXoiLz48L3N2Zz4=',
           iconSize: [32, 32],
           iconAnchor: [16, 32],
           popupAnchor: [0, -32]
@@ -113,7 +114,7 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
 
         marker.current = L.marker([clickLat, clickLon], {
           icon: L.icon({
-            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzIyNjhkMCIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyYzAgNSAzLjY0IDkuMjcgOC4zIDkuOTdWMjJjMCAwIDYgLjEgNiAwdjBjNC42NyAwIDEwLTIuMzMgMTAtMTBzLTUuMzMtMTAtMTAtMXptMCA1Yy0yLjc2IDAtNSAyLjI0LTUgNXMyLjI0IDUgNSA1IDUtMi4yNCA1LTUtMi4yNC01LTUtNXoiLz48L3N2Zz4=',
+            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2VmNDMzNiIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyYzAgNSAzLjY0IDkuMjcgOC4zIDkuOTdWMjJjMCAwIDYgLjEgNiAwdjBjNC42NyAwIDEwLTIuMzMgMTAtMTBzLTUuMzMtMTAtMTAtMXptMCA1Yy0yLjc2IDAtNSAyLjI0LTUgNXMyLjI0IDUgNSA1IDUtMi4yNCA1LTUtMi4yNC01LTUtNXoiLz48L3N2Zz4=',
             iconSize: [32, 32],
             iconAnchor: [16, 32],
             popupAnchor: [0, -32]
