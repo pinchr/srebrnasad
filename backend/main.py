@@ -50,39 +50,49 @@ async def startup_event():
     init_db()
     print("Database initialized")
 
+@app.get("/health")
+async def health():
+    """Health check endpoint"""
+    return {"status": "ok"}
+
+# Root endpoint - serve index.html (MUST be before catch-all)
+from fastapi.responses import FileResponse
+
 @app.get("/")
 async def root():
-    """Root endpoint"""
+    """Root endpoint - serve frontend"""
+    frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+    index_path = frontend_dist / "index.html"
+    
+    if index_path.exists():
+        return FileResponse(index_path)
+    
     return {
         "message": "Welcome to Srebrna Sad API",
         "version": "0.1.0",
         "docs": "/docs"
     }
 
-@app.get("/health")
-async def health():
-    """Health check endpoint"""
-    return {"status": "ok"}
-
 # Catch-all for SPA routing (must be last)
-from fastapi.responses import FileResponse
-
 @app.get("/{path_name:path}")
 async def serve_spa(path_name: str):
     """Serve SPA index.html for all non-API routes"""
     frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"
+    
+    if not frontend_dist.exists():
+        return {"error": "Frontend not built", "path": str(frontend_dist)}
     
     # Check if it's a static asset file
     file_path = frontend_dist / path_name
     if file_path.exists() and file_path.is_file():
         return FileResponse(file_path)
     
-    # Serve index.html for all other routes (SPA routing)
+    # For any other route, serve index.html (SPA routing)
     index_path = frontend_dist / "index.html"
     if index_path.exists():
         return FileResponse(index_path)
     
-    return {"error": "Frontend not built"}
+    return {"error": "File not found"}
     
 
 if __name__ == "__main__":
