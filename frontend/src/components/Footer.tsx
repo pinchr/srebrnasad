@@ -27,7 +27,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; {currentYear} Srebrna Sad. Wszelkie prawa zastrzeżone.</p>
+          <p>&copy; {currentYear} CzyzbySoft. Wszelkie prawa zastrzeżone.</p>
         </div>
       </div>
     </footer>
