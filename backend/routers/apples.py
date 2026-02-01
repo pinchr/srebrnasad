@@ -14,6 +14,7 @@ class AppleCreate(BaseModel):
     price: float = Field(..., gt=0)
     available: bool = True
     photo_url: Optional[str] = None
+    max_quantity_kg: int = Field(default=250, ge=0)
 
 class AppleUpdate(BaseModel):
     """Update apple variety"""
@@ -22,6 +23,7 @@ class AppleUpdate(BaseModel):
     price: Optional[float] = None
     available: Optional[bool] = None
     photo_url: Optional[str] = None
+    max_quantity_kg: Optional[int] = None
 
 class AppleResponse(BaseModel):
     """Apple variety response"""
@@ -31,6 +33,7 @@ class AppleResponse(BaseModel):
     price: float
     available: bool
     photo_url: Optional[str] = None
+    max_quantity_kg: int
     created_at: datetime
 
 @router.get("/", response_model=dict)
@@ -110,6 +113,7 @@ async def create_apple(apple: AppleCreate):
             "price": apple.price,
             "available": apple.available,
             "photo_url": apple.photo_url,
+            "max_quantity_kg": apple.max_quantity_kg,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }

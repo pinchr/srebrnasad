@@ -25,7 +25,8 @@ export default function AdminContent({ onClose }: AdminContentProps) {
     name: '',
     description: '',
     price: 0,
-    available: true
+    available: true,
+    max_quantity_kg: 250
   })
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [message, setMessage] = useState('')
@@ -81,7 +82,8 @@ export default function AdminContent({ onClose }: AdminContentProps) {
         description: formData.description,
         price: formData.price,
         available: formData.available,
-        photo_url: photoUrl
+        photo_url: photoUrl,
+        max_quantity_kg: (formData as any).max_quantity_kg || 250
       }
 
       if (editingApple) {
@@ -92,7 +94,7 @@ export default function AdminContent({ onClose }: AdminContentProps) {
         setMessage('✓ Odmiana dodana')
       }
 
-      setFormData({ name: '', description: '', price: 0, available: true })
+      setFormData({ name: '', description: '', price: 0, available: true, max_quantity_kg: 250 })
       setPhotoFile(null)
       setEditingApple(null)
       setNewApple(false)
@@ -129,14 +131,15 @@ export default function AdminContent({ onClose }: AdminContentProps) {
       name: apple.name,
       description: apple.description,
       price: apple.price,
-      available: apple.available
+      available: apple.available,
+      max_quantity_kg: (apple as any).max_quantity_kg || 250
     })
   }
 
   const cancelEdit = () => {
     setEditingApple(null)
     setNewApple(false)
-    setFormData({ name: '', description: '', price: 0, available: true })
+    setFormData({ name: '', description: '', price: 0, available: true, max_quantity_kg: 250 })
     setPhotoFile(null)
   }
 
@@ -257,6 +260,20 @@ export default function AdminContent({ onClose }: AdminContentProps) {
                     step="0.10"
                     min="0"
                   />
+                </div>
+
+                <div className="form-group">
+                  <label>Max ilość dostępna (kg) *</label>
+                  <input
+                    type="number"
+                    name="max_quantity_kg"
+                    value={(formData as any).max_quantity_kg}
+                    onChange={handleInputChange}
+                    min="0"
+                    max="1000"
+                    step="10"
+                  />
+                  <small>Maksimum dla klienta będzie min(250kg, ta ilość)</small>
                 </div>
 
                 <div className="form-group">

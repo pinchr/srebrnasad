@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useAdmin } from '../AdminContext'
 import './Hero.css'
@@ -21,6 +21,21 @@ export default function Hero() {
   })
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [message, setMessage] = useState('')
+
+  // Load hero data from backend on mount
+  useEffect(() => {
+    const loadHeroData = async () => {
+      try {
+        const response = await axios.get('/api/content/hero')
+        if (response.data) {
+          setHeroData(response.data)
+        }
+      } catch (err) {
+        console.error('Failed to load hero data:', err)
+      }
+    }
+    loadHeroData()
+  }, [])
 
   const toggleEditMode = () => {
     setIsLocalEditMode(!isLocalEditMode)

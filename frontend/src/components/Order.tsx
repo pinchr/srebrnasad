@@ -9,6 +9,7 @@ interface Apple {
   price: number
   photo_url?: string
   available: boolean
+  max_quantity_kg?: number
 }
 
 interface AppleSelection {
@@ -364,6 +365,7 @@ export default function Order() {
                   {selectedApples.map(selection => {
                     const apple = apples.find(a => a._id === selection.apple_id)
                     if (!apple) return null
+                    const maxQuantity = Math.min(250, apple.max_quantity_kg || 250)
                     return (
                       <div key={selection.apple_id} className="selected-item">
                         <div className="item-info">
@@ -374,6 +376,7 @@ export default function Order() {
                               type="number"
                               min="10"
                               step="5"
+                              max={maxQuantity}
                               value={selection.quantity_kg}
                               onChange={(e) => updateAppleQuantity(selection.apple_id, parseInt(e.target.value) || 10)}
                               className="qty-input"
@@ -383,7 +386,7 @@ export default function Order() {
                           <input
                             type="range"
                             min="10"
-                            max="100"
+                            max={maxQuantity}
                             step="5"
                             value={selection.quantity_kg}
                             onChange={(e) => updateAppleQuantity(selection.apple_id, parseInt(e.target.value))}

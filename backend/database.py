@@ -57,6 +57,7 @@ def init_db():
                 "description": "Słodkie i socziste",
                 "price": 4.50,
                 "available": True,
+                "max_quantity_kg": 250,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             },
@@ -65,6 +66,7 @@ def init_db():
                 "description": "Mieszanka słodkości i kwaskości",
                 "price": 5.00,
                 "available": True,
+                "max_quantity_kg": 250,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             },
@@ -73,6 +75,7 @@ def init_db():
                 "description": "Słodkie z nutą kardamonu",
                 "price": 5.50,
                 "available": True,
+                "max_quantity_kg": 250,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             },
