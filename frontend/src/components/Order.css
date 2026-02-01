@@ -633,3 +633,18 @@
   background-color: #e8f5e9;
   color: #27ae60;
 }
+
+/* Info Box */
+.info-box {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.info-box p {
+  margin: 0;
+  color: #1565c0;
+  font-weight: 500;
+}

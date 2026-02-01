@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import apiClient from '../axiosConfig'
+import MapPicker from './MapPicker'
 import './Order.css'
 
 interface Apple {
@@ -246,6 +247,15 @@ export default function Order() {
       setError('Wybierz co najmniej jedną odmianę jabłek')
       setSubmitting(false)
       return
+    }
+
+    // Validate pickup date/time for non-delivery orders
+    if (!formData.delivery) {
+      if (!formData.pickup_datetime) {
+        setError('Wybierz datę i godzinę odbioru')
+        setSubmitting(false)
+        return
+      }
     }
 
     // Validate delivery
@@ -531,6 +541,24 @@ export default function Order() {
                   </button>
                 </div>
                 <small>Podaj ulicę, numer domu i kod pocztowy, np. "Płońska 12, 09-100 Płońsk"</small>
+                
+                {/* Map Picker for Address Selection */}
+                <MapPicker
+                  address={formData.delivery_address}
+                  lat={formData.delivery_lat}
+                  lon={formData.delivery_lon}
+                  onAddressChange={(newAddress, newLat, newLon) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      delivery_address: newAddress,
+                      delivery_lat: newLat,
+                      delivery_lon: newLon
+                    }))
+                    // Auto-validate new coordinates
+                    geocodeAddress(newAddress)
+                  }}
+                />
+                
                 {deliveryValidation && (
                   <>
                     {deliveryValidation.valid ? (
@@ -617,7 +645,8 @@ export default function Order() {
               <small>Wyślemy fakturę i pinezkę miejsca odbioru</small>
             </div>
 
-            {/* Pickup Date & Time */}
+            {/* Pickup Date & Time - Hidden if delivery selected */}
+            {!formData.delivery && (
             <div className="form-group">
               <label>Data i godzina odbioru *</label>
               <div className="datetime-inputs">
@@ -667,6 +696,14 @@ export default function Order() {
                 <small>⏰ Duże zamówienie - minimum {Math.ceil((totalQuantity - 30) / 20 + 1)} dnia z wyprzedzeniem</small>
               )}
             </div>
+            )}
+
+            {/* Delivery Date Info */}
+            {formData.delivery && (
+              <div className="form-group info-box">
+                <p>📦 Dostawę zorganizujemy w ciągu 2-3 dni roboczych od potwierdzenia zamówienia.</p>
+              </div>
+            )}
 
             <button 
               type="submit" 

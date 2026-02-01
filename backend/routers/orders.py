@@ -118,12 +118,12 @@ async def validate_delivery(validation: DeliveryValidation):
     distance = await calculate_distance(ORCHARD_LAT, ORCHARD_LON, validation.delivery_lat, validation.delivery_lon)
     
     # Check maximum distance
-    if distance > 25:
+    if distance > 100:
         return DeliveryValidationResponse(
             valid=False,
             distance_km=distance,
             delivery_fee=0,
-            error=f"Adres jest za daleko ({distance:.1f} km). Maksymalna odległość to 25 km."
+            error=f"Adres jest za daleko ({distance:.1f} km). Maksymalna odległość to 100 km."
         )
     
     # All good
@@ -241,10 +241,10 @@ async def create_order(order: OrderCreate):
             # Calculate distance using OSRM
             delivery_distance = await calculate_distance(ORCHARD_LAT, ORCHARD_LON, order.delivery_lat, order.delivery_lon)
             
-            if delivery_distance > 25:
+            if delivery_distance > 100:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Adres jest za daleko ({delivery_distance:.1f} km). Maksymalna odległość to 25 km."
+                    detail=f"Adres jest za daleko ({delivery_distance:.1f} km). Maksymalna odległość to 100 km."
                 )
             
             delivery_fee = 25.0
