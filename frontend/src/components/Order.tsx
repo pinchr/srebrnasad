@@ -391,27 +391,34 @@ export default function Order() {
             </div>
 
             {/* Delivery Option */}
-            {totalQuantity >= 200 && (
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={formData.delivery}
-                    onChange={(e) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        delivery: e.target.checked
-                      }))
-                      if (!e.target.checked) {
-                        setDeliveryValidation(null)
-                      }
-                    }}
-                  />
-                  <span>Dostawa do domu (+25 zł)</span>
-                </label>
-                <small>Dostępna od 200 kg, do 25 km od sadu</small>
-              </div>
-            )}
+            <div className="form-group">
+              <label className={`checkbox-label ${totalQuantity < 200 ? 'disabled' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={formData.delivery}
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      delivery: e.target.checked
+                    }))
+                    if (!e.target.checked) {
+                      setDeliveryValidation(null)
+                    }
+                  }}
+                  disabled={totalQuantity < 200}
+                />
+                <span>🚚 Dostawa do domu (+25 zł)</span>
+              </label>
+              {totalQuantity < 200 ? (
+                <small className="delivery-hint">
+                  ℹ️ Dostawa dostępna od 200 kg. Brakuje {200 - totalQuantity} kg do dostawy.
+                </small>
+              ) : (
+                <small className="delivery-hint success">
+                  ✓ Gratulacje! Możesz teraz wybrać dostawę. Dostawa do 25 km od sadu.
+                </small>
+              )}
+            </div>
 
             {/* Delivery Address */}
             {formData.delivery && (

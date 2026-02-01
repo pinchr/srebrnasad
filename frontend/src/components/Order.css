@@ -607,3 +607,29 @@
     width: 100%;
   }
 }
+
+/* Disabled delivery checkbox */
+.checkbox-label.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checkbox-label.disabled input[type="checkbox"] {
+  cursor: not-allowed;
+  accent-color: #ccc;
+}
+
+.delivery-hint {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  color: #666;
+  font-weight: 500;
+}
+
+.delivery-hint.success {
+  background-color: #e8f5e9;
+  color: #27ae60;
+}
