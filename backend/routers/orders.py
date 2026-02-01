@@ -4,8 +4,30 @@ from typing import Optional
 from datetime import datetime
 from bson import ObjectId
 from database import get_db
+import math
 
 router = APIRouter(prefix="/orders", tags=["orders"])
+
+# Srebrna Sad location: 52.3138, 20.8445 (Srebrna 15, Nacpolsk)
+ORCHARD_LAT = 52.3138
+ORCHARD_LON = 20.8445
+
+def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    Calculate distance between two points on Earth using Haversine formula.
+    Returns distance in kilometers.
+    """
+    R = 6371  # Earth's radius in kilometers
+    
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+    
+    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
+    c = 2 * math.asin(math.sqrt(a))
+    
+    return R * c
 
 class AppleItem(BaseModel):
     """Apple item in order"""
@@ -20,6 +42,10 @@ class OrderCreate(BaseModel):
     customer_email: Optional[str] = None
     customer_phone: str = Field(..., min_length=1, max_length=20)
     pickup_datetime: str  # Format: "2026-02-15T14:30"
+    delivery: bool = False
+    delivery_address: Optional[str] = None
+    delivery_lat: Optional[float] = None
+    delivery_lon: Optional[float] = None
 
 class OrderResponse(BaseModel):
     """Order response"""
@@ -34,7 +60,63 @@ class OrderResponse(BaseModel):
     status: str
     total_quantity_kg: int
     total_price: float
+    delivery: bool
+    delivery_address: Optional[str]
+    delivery_distance: Optional[float]
+    delivery_fee: float
     created_at: datetime
+
+class DeliveryValidation(BaseModel):
+    """Validate delivery possibility"""
+    total_quantity_kg: int
+    delivery_lat: float
+    delivery_lon: float
+
+class DeliveryValidationResponse(BaseModel):
+    """Delivery validation response"""
+    valid: bool
+    distance_km: Optional[float]
+    delivery_fee: float
+    error: Optional[str]
+
+@router.post("/validate-delivery", response_model=DeliveryValidationResponse)
+async def validate_delivery(validation: DeliveryValidation):
+    """
+    Validate if delivery is possible for given address and quantity.
+    
+    Requirements:
+    - Minimum 200 kg
+    - Maximum 25 km distance
+    - Delivery fee: 25 zł
+    """
+    # Check minimum quantity
+    if validation.total_quantity_kg < 200:
+        return DeliveryValidationResponse(
+            valid=False,
+            distance_km=None,
+            delivery_fee=0,
+            error="Dostawa dostępna od 200 kg jabłek"
+        )
+    
+    # Calculate distance
+    distance = haversine_distance(ORCHARD_LAT, ORCHARD_LON, validation.delivery_lat, validation.delivery_lon)
+    
+    # Check maximum distance
+    if distance > 25:
+        return DeliveryValidationResponse(
+            valid=False,
+            distance_km=round(distance, 2),
+            delivery_fee=0,
+            error=f"Adres jest za daleko ({distance:.1f} km). Maksymalna odległość to 25 km."
+        )
+    
+    # All good
+    return DeliveryValidationResponse(
+        valid=True,
+        distance_km=round(distance, 2),
+        delivery_fee=25.0,
+        error=None
+    )
 
 @router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 async def create_order(order: OrderCreate):
@@ -68,6 +150,7 @@ async def create_order(order: OrderCreate):
     if db is None:
         # Development mode - return success
         total_qty = sum(a.quantity_kg for a in order.apples)
+        delivery_fee = 25.0 if order.delivery else 0.0
         return OrderResponse(
             id="dev-mode",
             apples=[a.dict() for a in order.apples],
@@ -80,6 +163,10 @@ async def create_order(order: OrderCreate):
             status="pending",
             total_quantity_kg=total_qty,
             total_price=0.0,
+            delivery=order.delivery,
+            delivery_address=order.delivery_address if order.delivery else None,
+            delivery_distance=None,
+            delivery_fee=delivery_fee,
             created_at=datetime.utcnow()
         )
     
@@ -110,8 +197,40 @@ async def create_order(order: OrderCreate):
             })
         
         # Add packaging cost
+        packaging_cost = 0
         if order.packaging == "box":
-            total_price += total_quantity * 2  # 2 zł per kg for packaging
+            packaging_cost = total_quantity * 2  # 2 zł per kg for packaging
+            total_price += packaging_cost
+        
+        # Validate and add delivery cost
+        delivery_fee = 0.0
+        delivery_distance = None
+        
+        if order.delivery:
+            # Validate delivery requirements
+            if total_quantity < 200:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Dostawa dostępna od 200 kg jabłek"
+                )
+            
+            if not order.delivery_address or not order.delivery_lat or not order.delivery_lon:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Podaj adres dostawy i współrzędne"
+                )
+            
+            # Calculate distance
+            delivery_distance = haversine_distance(ORCHARD_LAT, ORCHARD_LON, order.delivery_lat, order.delivery_lon)
+            
+            if delivery_distance > 25:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Adres jest za daleko ({delivery_distance:.1f} km). Maksymalna odległość to 25 km."
+                )
+            
+            delivery_fee = 25.0
+            total_price += delivery_fee
         
         # Create order document
         order_doc = {
@@ -125,7 +244,11 @@ async def create_order(order: OrderCreate):
             "status": "pending",  # pending, confirmed, ready, picked_up, cancelled
             "total_quantity_kg": total_quantity,
             "total_price": total_price,
-            "packaging_cost": total_quantity * 2 if order.packaging == "box" else 0,
+            "packaging_cost": packaging_cost,
+            "delivery": order.delivery,
+            "delivery_address": order.delivery_address if order.delivery else None,
+            "delivery_distance": round(delivery_distance, 2) if delivery_distance else None,
+            "delivery_fee": delivery_fee,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
@@ -145,6 +268,10 @@ async def create_order(order: OrderCreate):
             status="pending",
             total_quantity_kg=total_quantity,
             total_price=total_price,
+            delivery=order.delivery,
+            delivery_address=order.delivery_address if order.delivery else None,
+            delivery_distance=order_doc["delivery_distance"],
+            delivery_fee=delivery_fee,
             created_at=order_doc["created_at"]
         )
     except HTTPException:

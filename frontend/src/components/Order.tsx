@@ -23,6 +23,10 @@ interface OrderFormData {
   customer_email: string
   customer_phone: string
   pickup_datetime: string
+  delivery: boolean
+  delivery_address: string
+  delivery_lat: number | null
+  delivery_lon: number | null
 }
 
 export default function Order() {
@@ -35,11 +39,23 @@ export default function Order() {
     customer_email: '',
     customer_phone: '',
     pickup_datetime: '',
+    delivery: false,
+    delivery_address: '',
+    delivery_lat: null,
+    delivery_lon: null,
   })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [deliveryValidation, setDeliveryValidation] = useState<{
+    valid: boolean
+    distance_km?: number
+    delivery_fee: number
+    error?: string
+  } | null>(null)
+  const [validatingDelivery, setValidatingDelivery] = useState(false)
+  const [geocoding, setGeocoding] = useState(false)
 
   useEffect(() => {
     fetchApples()
@@ -69,6 +85,87 @@ export default function Order() {
       ])
       setLoading(false)
     }
+  }
+
+  const geocodeAddress = async (address: string) => {
+    if (!address.trim()) {
+      setDeliveryValidation(null)
+      return
+    }
+
+    setGeocoding(true)
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        { headers: { 'User-Agent': 'SrebrnaOrchard' } }
+      )
+      const results = await response.json()
+      
+      if (results.length === 0) {
+        setDeliveryValidation({
+          valid: false,
+          delivery_fee: 0,
+          error: 'Nie znaleziono adresu. Spróbuj inną nazwę lub kodeks pocztowy.'
+        })
+        return
+      }
+
+      const { lat, lon } = results[0]
+      const totalQuantity = selectedApples.reduce((sum, a) => sum + a.quantity_kg, 0)
+
+      // Update form data with coordinates
+      setFormData(prev => ({
+        ...prev,
+        delivery_lat: parseFloat(lat),
+        delivery_lon: parseFloat(lon)
+      }))
+
+      // Validate with backend
+      if (totalQuantity > 0) {
+        setValidatingDelivery(true)
+        try {
+          const validationResponse = await apiClient.post('/orders/validate-delivery', {
+            total_quantity_kg: totalQuantity,
+            delivery_lat: parseFloat(lat),
+            delivery_lon: parseFloat(lon)
+          })
+          setDeliveryValidation(validationResponse.data)
+        } catch (err) {
+          console.error('Delivery validation failed:', err)
+          setDeliveryValidation({
+            valid: false,
+            delivery_fee: 0,
+            error: 'Błąd walidacji dostawy. Spróbuj ponownie.'
+          })
+        } finally {
+          setValidatingDelivery(false)
+        }
+      }
+    } catch (err) {
+      console.error('Geocoding failed:', err)
+      setDeliveryValidation({
+        valid: false,
+        delivery_fee: 0,
+        error: 'Błąd wyszukiwania adresu. Spróbuj ponownie.'
+      })
+    } finally {
+      setGeocoding(false)
+    }
+  }
+
+  // Debounce geocoding
+  const handleDeliveryAddressChange = (address: string) => {
+    setFormData(prev => ({
+      ...prev,
+      delivery_address: address
+    }))
+    
+    // Debounce geocoding
+    const timer = setTimeout(() => {
+      geocodeAddress(address)
+    }, 500)
+
+    return () => clearTimeout(timer)
   }
 
   const addApple = (appleId: string) => {
@@ -124,6 +221,15 @@ export default function Order() {
       return
     }
 
+    // Validate delivery
+    if (formData.delivery) {
+      if (!deliveryValidation?.valid) {
+        setError(deliveryValidation?.error || 'Dostawa niedostępna dla tego adresu')
+        setSubmitting(false)
+        return
+      }
+    }
+
     try {
       await apiClient.post('/orders/', formData)
       setSubmitted(true)
@@ -135,7 +241,12 @@ export default function Order() {
         customer_email: '',
         customer_phone: '',
         pickup_datetime: '',
+        delivery: false,
+        delivery_address: '',
+        delivery_lat: null,
+        delivery_lon: null,
       })
+      setDeliveryValidation(null)
       setTimeout(() => setSubmitted(false), 5000)
     } catch (err) {
       setError('Nie udało się złożyć zamówienia. Spróbuj ponownie.')
@@ -163,6 +274,7 @@ export default function Order() {
     return sum + apple.price * selection.quantity_kg
   }, 0)
   const packagingCost = formData.packaging === 'box' ? totalQuantity * 2 : 0
+  const deliveryCost = deliveryValidation?.valid ? (deliveryValidation.delivery_fee || 0) : 0
 
   return (
     <section className="order">
@@ -288,6 +400,59 @@ export default function Order() {
               </div>
             </div>
 
+            {/* Delivery Option */}
+            {totalQuantity >= 200 && (
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.delivery}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        delivery: e.target.checked
+                      }))
+                      if (!e.target.checked) {
+                        setDeliveryValidation(null)
+                      }
+                    }}
+                  />
+                  <span>Dostawa do domu (+25 zł)</span>
+                </label>
+                <small>Dostępna od 200 kg, do 25 km od sadu</small>
+              </div>
+            )}
+
+            {/* Delivery Address */}
+            {formData.delivery && (
+              <div className="form-group">
+                <label htmlFor="delivery_address">Adres dostawy *</label>
+                <input
+                  type="text"
+                  id="delivery_address"
+                  value={formData.delivery_address}
+                  onChange={(e) => handleDeliveryAddressChange(e.target.value)}
+                  required={formData.delivery}
+                  placeholder="Adres, ulica, numer domu..."
+                  disabled={geocoding || validatingDelivery}
+                />
+                {geocoding && <small>🔍 Wyszukuję adres...</small>}
+                {deliveryValidation && (
+                  <>
+                    {deliveryValidation.valid ? (
+                      <small className="success-text">
+                        ✓ Dystans: {deliveryValidation.distance_km} km | Dostawa: {deliveryValidation.delivery_fee.toFixed(2)} zł
+                      </small>
+                    ) : (
+                      <small className="error-text">
+                        ✗ {deliveryValidation.error}
+                      </small>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Price Preview */}
             {totalQuantity > 0 && (
               <div className="price-preview">
@@ -305,9 +470,15 @@ export default function Order() {
                     <strong>{packagingCost.toFixed(2)} zł</strong>
                   </div>
                 )}
+                {formData.delivery && deliveryValidation?.valid && (
+                  <div className="price-row">
+                    <span>Dostawa ({deliveryValidation.distance_km} km):</span>
+                    <strong>{deliveryCost.toFixed(2)} zł</strong>
+                  </div>
+                )}
                 <div className="price-row total">
                   <span>Razem:</span>
-                  <strong>{(totalPrice + packagingCost).toFixed(2)} zł</strong>
+                  <strong>{(totalPrice + packagingCost + deliveryCost).toFixed(2)} zł</strong>
                 </div>
               </div>
             )}

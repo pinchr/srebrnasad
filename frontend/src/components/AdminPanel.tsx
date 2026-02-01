@@ -27,6 +27,10 @@ interface Order {
   status: string
   total_quantity_kg: number
   total_price: number
+  delivery: boolean
+  delivery_address?: string
+  delivery_distance?: number
+  delivery_fee: number
   created_at: string
 }
 
@@ -69,17 +73,29 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
     }
   }
 
-  const sendSMS = (phone: string, orderNum: string, status: string) => {
-    const statusMessages: Record<string, string> = {
-      pending: 'Twoje zamówienie zostało przyjęte i oczekuje na potwierdzenie.',
-      confirmed: 'Twoje zamówienie zostało potwierdzone! Przygotowujemy jabłka.',
-      ready: 'Twoje zamówienie jest gotowe do odbioru!\n\nZapraszamy do Srebrnej 15, 09-162 Nacpolsk\n\n📍 Mapa: https://maps.google.com/?q=Srebrna+15,+09-162+Nacpolsk',
+  const sendSMS = (phone: string, orderNum: string, status: string, order?: Order) => {
+    const isDelivery = order?.delivery ?? false
+    
+    const pickupMessages: Record<string, string> = {
+      pending: 'Twoje zamówienie zostało przyjęte i oczekuje na potwierdzenie.\n\nOdbiór: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia'),
+      confirmed: 'Twoje zamówienie zostało potwierdzone! Przygotowujemy jabłka.\n\nOdbiór: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia'),
+      ready: 'Twoje zamówienie jest gotowe do odbioru!\n\nZapraszamy do Srebrnej 15, 09-162 Nacpolsk\n\n📍 Mapa: https://maps.google.com/?q=Srebrna+15,+09-162+Nacpolsk\n\nGodzina: ' + (order?.pickup_time ?? '?'),
       picked_up: 'Dziękujemy za odbiór! Zapraszamy ponownie! 🍎',
       cancelled: 'Twoje zamówienie zostało anulowane.'
     }
     
+    const deliveryMessages: Record<string, string> = {
+      pending: 'Twoje zamówienie z dostawą zostało przyjęte i oczekuje na potwierdzenie.\n\nDeliwomania: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia'),
+      confirmed: 'Twoje zamówienie z dostawą zostało potwierdzone! Przygotowujemy jabłka.\n\nDeliwomania: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia') + '\n\nAdres: ' + (order?.delivery_address ?? 'brak adresu'),
+      ready: 'Twoje zamówienie jest gotowe do dostawy!\n\nDeliwomania: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia') + '\n\nAdres dostawy: ' + (order?.delivery_address ?? 'brak adresu') + '\n\nDystans: ' + (order?.delivery_distance?.toFixed(1) ?? '?') + ' km',
+      picked_up: 'Dziękujemy za dostawę! Zapraszamy ponownie! 🍎',
+      cancelled: 'Twoje zamówienie z dostawą zostało anulowane.'
+    }
+    
+    const messages = isDelivery ? deliveryMessages : pickupMessages
+    
     const message = encodeURIComponent(
-      `Srebrna Sad - Zamówienie #${orderNum}\n\n${statusMessages[status] || getStatusLabel(status)}\n\nTelefon: +48 XXX XXX XXX\ninfo@srebrnasad.pl\n\n🍎 Srebrna Sad`
+      `Srebrna Sad - Zamówienie #${orderNum}\n\n${messages[status] || getStatusLabel(status)}\n\nTelefon: +48 XXX XXX XXX\ninfo@srebrnasad.pl\n\n🍎 Srebrna Sad`
     )
     // Opens SMS on phone
     window.location.href = `sms:${phone}?body=${message}`
@@ -221,7 +237,8 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
                       onClick={() => sendSMS(
                         order.customer_phone,
                         order.id.slice(-6).toUpperCase(),
-                        order.status
+                        order.status,
+                        order
                       )}
                       title="Wyślij SMS (otworzy aplikację SMS)"
                     >
