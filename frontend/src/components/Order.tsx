@@ -98,14 +98,14 @@ export default function Order() {
 
     setGeocoding(true)
     try {
-      // Use Photon (better than Nominatim for small addresses)
+      // Use Nominatim OSM (reliable for Polish addresses)
       const geocodeResponse = await fetch(
-        `https://photon.komoot.io/api/?q=${encodeURIComponent(address + ', Polska')}&limit=1&lang=pl`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=PL&limit=1&addressdetails=1`,
         { headers: { 'User-Agent': 'SrebrnaOrchard' } }
       )
       const geocodeData = await geocodeResponse.json()
       
-      if (!geocodeData.features || geocodeData.features.length === 0) {
+      if (!Array.isArray(geocodeData) || geocodeData.length === 0) {
         setDeliveryValidation({
           valid: false,
           delivery_fee: 0,
@@ -114,9 +114,8 @@ export default function Order() {
         return
       }
 
-      const coords = geocodeData.features[0].geometry.coordinates
-      const lat = coords[1]
-      const lon = coords[0]
+      const lat = parseFloat(geocodeData[0].lat)
+      const lon = parseFloat(geocodeData[0].lon)
 
       // Calculate real route distance using OSRM (not straight line)
       const orchardLon = 20.8445
