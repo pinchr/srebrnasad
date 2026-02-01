@@ -456,10 +456,14 @@ export default function Order() {
                     type="text"
                     id="delivery_address"
                     value={formData.delivery_address}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      delivery_address: e.target.value
-                    }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        delivery_address: e.target.value
+                      }))
+                      // Reset validation when address changes
+                      setDeliveryValidation(null)
+                    }}
                     required={formData.delivery}
                     placeholder="Ulica, numer domu, kod pocztowy..."
                     disabled={geocoding}
