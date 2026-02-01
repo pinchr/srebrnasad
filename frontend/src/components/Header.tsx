@@ -1,3 +1,5 @@
+import { useAdmin } from '../AdminContext'
+import LoginPanel from './LoginPanel'
 import './Header.css'
 
 interface HeaderProps {
@@ -6,6 +8,7 @@ interface HeaderProps {
 }
 
 export default function Header({ currentPage, setCurrentPage }: HeaderProps) {
+  const { isAdminLoggedIn } = useAdmin()
   return (
     <header className="header">
       <div className="container">
@@ -38,13 +41,19 @@ export default function Header({ currentPage, setCurrentPage }: HeaderProps) {
           >
             Kontakt
           </button>
-          <button 
-            className={`nav-link admin-link ${currentPage === 'admin' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('admin')}
-            title="Panel administracyjny"
-          >
-            ⚙️
-          </button>
+          
+          {isAdminLoggedIn && (
+            <button 
+              className={`nav-link admin-link ${currentPage === 'admin' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('admin')}
+              title="Panel administracyjny"
+            >
+              ⚙️
+            </button>
+          )}
+          
+          <div className="nav-spacer"></div>
+          <LoginPanel />
         </nav>
       </div>
     </header>
