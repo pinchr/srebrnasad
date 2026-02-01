@@ -212,10 +212,12 @@ async def create_order(order: OrderCreate):
                 "subtotal": item_price
             })
         
-        # Add packaging cost
+        # Add packaging cost (5 zł per 15kg returnable package)
         packaging_cost = 0
         if order.packaging == "box":
-            packaging_cost = total_quantity * 2  # 2 zł per kg for packaging
+            # Calculate number of 15kg packages needed (round up)
+            num_packages = (total_quantity + 14) // 15  # Ceiling division
+            packaging_cost = num_packages * 5  # 5 zł per 15kg package
             total_price += packaging_cost
         
         # Validate and add delivery cost

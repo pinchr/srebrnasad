@@ -305,7 +305,9 @@ export default function Order() {
     if (!apple) return sum
     return sum + apple.price * selection.quantity_kg
   }, 0)
-  const packagingCost = formData.packaging === 'box' ? totalQuantity * 2 : 0
+  // Packaging: 5 zł per 15kg returnable package
+  const numPackages = formData.packaging === 'box' ? Math.ceil(totalQuantity / 15) : 0
+  const packagingCost = numPackages * 5
   const deliveryCost = deliveryValidation?.valid ? (deliveryValidation.delivery_fee || 0) : 0
 
   return (
@@ -314,6 +316,10 @@ export default function Order() {
         <h2>Zamów Jabłka</h2>
         <p className="order-intro">
           Zamów świeże jabłka bezpośrednio z naszego sadu. Minimum 10 kg na odmianę.
+          <br />
+          <small style={{ marginTop: '0.5rem', display: 'block', color: '#666' }}>
+            💡 Zamówienia powyżej 250 kg jednej odmiany obsługujemy w dużych skrzyniach. Skontaktuj się z nami aby uzyskać cenę hurtową.
+          </small>
         </p>
 
         <div className="order-layout">
@@ -421,10 +427,10 @@ export default function Order() {
                       onChange={() => {}}
                       disabled
                     />
-                    <span>Nasze pudełko (+2 zł za kg)</span>
+                    <span>Nasze pudełko (5 zł za 15kg)</span>
                   </label>
                   <small style={{ marginTop: '0.5rem', display: 'block', color: '#666' }}>
-                    Przy dostawie wymagane jest nasze pudełko
+                    Pudełka można zwrócić (system kaucyjny). Przy dostawie wymagane jest nasze pudełko.
                   </small>
                 </div>
               ) : (
@@ -447,8 +453,11 @@ export default function Order() {
                       checked={formData.packaging === 'box'}
                       onChange={handleChange}
                     />
-                    <span>Nasze pudełko (+2 zł za kg)</span>
+                    <span>Nasze pudełko (5 zł za 15kg)</span>
                   </label>
+                  <small style={{ marginTop: '0.5rem', display: 'block', color: '#666' }}>
+                    Pudełka mogą zostać zwrócone za pełną kwotę kaucji (system kaucyjny).
+                  </small>
                 </div>
               )}
             </div>
@@ -551,7 +560,7 @@ export default function Order() {
                 </div>
                 {packagingCost > 0 && (
                   <div className="price-row">
-                    <span>Opakowanie:</span>
+                    <span>Opakowanie ({numPackages} x 15kg pudełka):</span>
                     <strong>{packagingCost.toFixed(2)} zł</strong>
                   </div>
                 )}

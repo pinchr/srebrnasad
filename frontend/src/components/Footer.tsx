@@ -25,7 +25,7 @@ export default function Footer({ setCurrentPage }: FooterProps) {
           <div className="footer-section">
             <h4>Szybkie Linki</h4>
             <ul>
-              <li><button onClick={() => handleLinkClick('home')} className="footer-link">Strona główna</button></li>
+              <li><button onClick={() => handleLinkClick('order')} className="footer-link">Zamów</button></li>
               <li><button onClick={() => handleLinkClick('gallery')} className="footer-link">Galeria</button></li>
               <li><button onClick={() => handleLinkClick('contact')} className="footer-link">Kontakt</button></li>
             </ul>

@@ -10,7 +10,11 @@ interface HeroData {
   background_image?: string
 }
 
-export default function Hero() {
+interface HeroProps {
+  setCurrentPage?: (page: 'home' | 'gallery' | 'order' | 'contact' | 'admin') => void
+}
+
+export default function Hero({ setCurrentPage }: HeroProps) {
   const { isAdminLoggedIn } = useAdmin()
   const [isLocalEditMode, setIsLocalEditMode] = useState(false)
   const [heroData, setHeroData] = useState<HeroData>({
@@ -162,6 +166,21 @@ export default function Hero() {
         <h2>{heroData.title}</h2>
         <p>{heroData.subtitle}</p>
         <p className="description">{heroData.description}</p>
+        
+        <div className="hero-cta">
+          <button 
+            className="cta-button primary" 
+            onClick={() => setCurrentPage?.('order')}
+          >
+            🍎 Sprawdź dostępne odmiany jabłek
+          </button>
+          <button 
+            className="cta-button secondary" 
+            onClick={() => setCurrentPage?.('order')}
+          >
+            🛒 Złóż zamówienie
+          </button>
+        </div>
       </div>
 
       {isAdminLoggedIn && (

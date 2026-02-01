@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import About from './components/About'
+import Location from './components/Location'
 import Gallery from './components/Gallery'
 import Order from './components/Order'
 import Contact from './components/Contact'
@@ -18,8 +19,9 @@ function App() {
       
       {currentPage === 'home' && (
         <>
-          <Hero />
+          <Hero setCurrentPage={setCurrentPage} />
           <About />
+          <Location />
         </>
       )}
       
