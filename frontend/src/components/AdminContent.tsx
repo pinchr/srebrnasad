@@ -71,7 +71,7 @@ export default function AdminContent({ onClose }: AdminContentProps) {
       if (photoFile) {
         const formDataWithPhoto = new FormData()
         formDataWithPhoto.append('file', photoFile)
-        const photoResponse = await apiClient.post('upload/', formDataWithPhoto, {
+        const photoResponse = await apiClient.post('upload', formDataWithPhoto, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         photoUrl = photoResponse.data.url
@@ -90,7 +90,7 @@ export default function AdminContent({ onClose }: AdminContentProps) {
         await apiClient.put(`apples/${editingApple._id}/`, appleData)
         setMessage('✓ Odmiana zaktualizowana')
       } else {
-        await apiClient.post('apples/', appleData)
+        await apiClient.post('apples', appleData)
         setMessage('✓ Odmiana dodana')
       }
 

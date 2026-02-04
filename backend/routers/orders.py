@@ -9,9 +9,10 @@ import asyncio
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
-# Srebrna 15 location: 52.3138, 20.8445 (Srebrna 15, Nacpolsk)
-ORCHARD_LAT = 52.3138
-ORCHARD_LON = 20.8445
+# Srebrna 15 location: Srebrna 15, 09-152 Naruszewo
+ORCHARD_LAT = 52.49112601595363
+ORCHARD_LON = 20.32534254089926
+ORCHARD_NAME = "Srebrna 15, Naruszewo"
 
 async def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
@@ -71,8 +72,8 @@ class OrderResponse(BaseModel):
     customer_name: str
     customer_email: Optional[str]
     customer_phone: str
-    pickup_date: str
-    pickup_time: str
+    pickup_date: str | None =None
+    pickup_time: str | None =None
     status: str
     total_quantity_kg: int
     total_price: float
@@ -94,6 +95,21 @@ class DeliveryValidationResponse(BaseModel):
     distance_km: Optional[float]
     delivery_fee: float
     error: Optional[str]
+
+class OrchardConfig(BaseModel):
+    """Orchard configuration"""
+    lat: float
+    lon: float
+    name: str
+
+@router.get("/config", response_model=OrchardConfig)
+async def get_orchard_config():
+    """Get orchard configuration (coordinates)"""
+    return OrchardConfig(
+        lat=ORCHARD_LAT,
+        lon=ORCHARD_LON,
+        name=ORCHARD_NAME
+    )
 
 @router.post("/validate-delivery", response_model=DeliveryValidationResponse)
 async def validate_delivery(validation: DeliveryValidation):
@@ -118,12 +134,12 @@ async def validate_delivery(validation: DeliveryValidation):
     distance = await calculate_distance(ORCHARD_LAT, ORCHARD_LON, validation.delivery_lat, validation.delivery_lon)
     
     # Check maximum distance
-    if distance > 100:
+    if distance > 50:
         return DeliveryValidationResponse(
             valid=False,
             distance_km=distance,
             delivery_fee=0,
-            error=f"Adres jest za daleko ({distance:.1f} km). Maksymalna odległość to 100 km."
+            error=f"Adres jest za daleko ({distance:.1f} km). Maksymalna odległość to 50 km."
         )
     
     # All good
@@ -157,12 +173,13 @@ async def create_order(order: OrderCreate):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Ilość musi wynosić co najmniej 10 kg, zwiększana co 5 kg"
             )
-    
-    # Parse pickup_datetime to date and time
-    pickup_dt = datetime.fromisoformat(order.pickup_datetime)
-    pickup_date = pickup_dt.strftime("%Y-%m-%d")
-    pickup_time = pickup_dt.strftime("%H:%M")
-    
+    pickup_date, pickup_time = None, None
+    if not order.delivery:
+        # Parse pickup_datetime to date and time
+        pickup_dt = datetime.fromisoformat(order.pickup_datetime)
+        pickup_date = pickup_dt.strftime("%Y-%m-%d")
+        pickup_time = pickup_dt.strftime("%H:%M")
+        
     if db is None:
         # Development mode - return success
         total_qty = sum(a.quantity_kg for a in order.apples)
@@ -241,10 +258,10 @@ async def create_order(order: OrderCreate):
             # Calculate distance using OSRM
             delivery_distance = await calculate_distance(ORCHARD_LAT, ORCHARD_LON, order.delivery_lat, order.delivery_lon)
             
-            if delivery_distance > 100:
+            if delivery_distance > 50:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Adres jest za daleko ({delivery_distance:.1f} km). Maksymalna odległość to 100 km."
+                    detail=f"Adres jest za daleko ({delivery_distance:.1f} km). Maksymalna odległość to 50 km."
                 )
             
             delivery_fee = 25.0

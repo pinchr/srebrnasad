@@ -63,11 +63,11 @@ export default function Contact() {
             </div>
             <div className="info-item">
               <span className="label">📞 Telefon:</span>
-              <p>+48 509518545</p>
+              <p><a href="tel:+48509518545">+48 509 518 545</a></p>
             </div>
             <div className="info-item">
               <span className="label">✉️ Email:</span>
-              <p>info@srebrnasad.pl</p>
+              <p><a href="mailto:info@srebrnasad.pl">info@srebrnasad.pl</a></p>
             </div>
           </div>
 

@@ -57,10 +57,24 @@ export default function Order() {
     error?: string
   } | null>(null)
   const [geocoding, setGeocoding] = useState(false)
+  const [orchardLat, setOrchardLat] = useState(52.49112601595363)
+  const [orchardLon, setOrchardLon] = useState(20.32534254089926)
 
   useEffect(() => {
     fetchApples()
+    fetchOrchardConfig()
   }, [])
+
+  const fetchOrchardConfig = async () => {
+    try {
+      const response = await apiClient.get('/orders/config')
+      setOrchardLat(response.data.lat)
+      setOrchardLon(response.data.lon)
+    } catch (err) {
+      console.error('Failed to fetch orchard config:', err)
+      // Keep default coordinates
+    }
+  }
 
   useEffect(() => {
     // Update form apples when selectedApples changes
@@ -118,14 +132,11 @@ export default function Order() {
       const lat = parseFloat(geocodeData[0].lat)
       const lon = parseFloat(geocodeData[0].lon)
 
-      // Calculate real route distance using OSRM (not straight line)
-      const orchardLon = 20.8445
-      const orchardLat = 52.3138
-
       try {
         const routeResponse = await fetch(
           `https://router.project-osrm.org/route/v1/driving/${orchardLon},${orchardLat};${lon},${lat}?overview=false`
         )
+        console.log('🗺️ OSRM request:', `https://router.project-osrm.org/route/v1/driving/${orchardLon},${orchardLat};${lon},${lat}`)
         const routeData = await routeResponse.json()
 
         if (routeData.routes && routeData.routes.length > 0) {
@@ -133,6 +144,7 @@ export default function Order() {
           const distanceKm = Math.round((routeData.routes[0].distance / 1000) * 10) / 10 // Round to 1 decimal
 
           const totalQuantity = selectedApples.reduce((sum, a) => sum + a.quantity_kg, 0)
+          console.log('🗺️ Dystans obliczony z OSRM:', distanceKm, 'km')
 
           // Update form data with coordinates
           setFormData(prev => ({

@@ -89,16 +89,17 @@
 }
 
 .apple-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 500px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  max-height: 600px;
   overflow-y: auto;
   padding-right: 8px;
 }
 
 .apple-card {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   padding: 0.75rem;
   background-color: #f9f7f4;
@@ -106,22 +107,24 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  align-items: flex-start;
-  text-align: left;
+  align-items: center;
+  text-align: center;
   position: relative;
-  min-height: 80px;
+  min-height: auto;
 }
 
 @media (max-width: 480px) {
+  .apple-list {
+    grid-template-columns: 1fr;
+  }
+  
   .apple-card {
     padding: 0.6rem;
     gap: 0.6rem;
-    min-height: 70px;
   }
   
   .apple-photo {
-    width: 50px;
-    height: 50px;
+    height: 100px;
   }
 }
 
@@ -138,8 +141,8 @@
 }
 
 .apple-photo {
-  width: 60px;
-  height: 60px;
+  width: 100%;
+  height: 120px;
   flex-shrink: 0;
   border-radius: 6px;
   overflow: hidden;
@@ -147,7 +150,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1;
 }
 
 .apple-photo img {
@@ -163,36 +166,41 @@
 
 .apple-info {
   flex: 1;
+  width: 100%;
 }
 
 .apple-info h4 {
-  margin: 0 0 0.2rem;
-  font-size: 0.95rem;
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
 .apple-info .description {
-  margin: 0 0 0.2rem;
-  font-size: 0.75rem;
+  margin: 0 0 0.3rem;
+  font-size: 0.8rem;
   color: #666;
-  line-height: 1.2;
+  line-height: 1.3;
+  min-height: 2.2em;
 }
 
 .apple-info .price {
   margin: 0;
   font-weight: bold;
   color: #2c5f2d;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .unavailable-badge,
 .added-badge {
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: 3px;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   white-space: nowrap;
   flex-shrink: 0;
   font-weight: 600;
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
 }
 
 .unavailable-badge {

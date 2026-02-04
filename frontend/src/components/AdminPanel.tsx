@@ -85,9 +85,9 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
     }
     
     const deliveryMessages: Record<string, string> = {
-      pending: 'Twoje zamówienie z dostawą zostało przyjęte i oczekuje na potwierdzenie.\n\nDeliwomania: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia'),
-      confirmed: 'Twoje zamówienie z dostawą zostało potwierdzone! Przygotowujemy jabłka.\n\nDeliwomania: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia') + '\n\nAdres: ' + (order?.delivery_address ?? 'brak adresu'),
-      ready: 'Twoje zamówienie jest gotowe do dostawy!\n\nDeliwomania: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia') + '\n\nAdres dostawy: ' + (order?.delivery_address ?? 'brak adresu') + '\n\nDystans: ' + (order?.delivery_distance?.toFixed(1) ?? '?') + ' km',
+      pending: 'Twoje zamówienie z dostawą zostało przyjęte i oczekuje na potwierdzenie.\n\nPlanujemy dostarczyć: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia'),
+      confirmed: 'Twoje zamówienie z dostawą zostało potwierdzone! Przygotowujemy jabłka.\n\nPlanujemy dostarczyć: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia') + '\n\nAdres: ' + (order?.delivery_address ?? 'brak adresu'),
+      ready: 'Twoje zamówienie jest gotowe do dostawy!\n\nPlanujemy dostarczyć: ' + (order?.pickup_date && order?.pickup_time ? `${order.pickup_date} o ${order.pickup_time}` : 'data do ustalenia') + '\n\nAdres dostawy: ' + (order?.delivery_address ?? 'brak adresu') + '\n\nDystans: ' + (order?.delivery_distance?.toFixed(1) ?? '?') + ' km',
       picked_up: 'Dziękujemy za dostawę! Zapraszamy ponownie! 🍎',
       cancelled: 'Twoje zamówienie z dostawą zostało anulowane.'
     }
@@ -211,7 +211,17 @@ export default function AdminPanel({ setCurrentPage }: AdminPanelProps) {
                     <div className="order-details">
                       <h5>Szczegóły</h5>
                       <p>📦 Opakowanie: {order.packaging === 'own' ? 'Własne' : 'Nasze pudełko'}</p>
-                      <p>📍 Odbiór: {order.pickup_date} o {order.pickup_time}</p>
+                      {!order.delivery && (
+                        <p>📍 Odbiór: {order.pickup_date} o {order.pickup_time}</p>
+                      )}
+                      {order.delivery && (
+                        <>
+                          <p>🚚 Dostawa do domu</p>
+                          <p>Adres: {order.delivery_address}</p>
+                          <p>Planujemy dostarczyć: {order.pickup_date} o {order.pickup_time}</p>
+                          {order.delivery_distance && <p>Dystans: {order.delivery_distance.toFixed(1)} km</p>}
+                        </>
+                      )}
                       <p>💰 Razem: <strong>{order.total_price.toFixed(2)} zł</strong></p>
                     </div>
                   </div>

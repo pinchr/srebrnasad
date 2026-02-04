@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import apiClient from '../axiosConfig'
 import './MapPicker.css'
 
 interface MapPickerProps {
@@ -14,9 +15,23 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
   const marker = useRef<any>(null)
   const [isMapOpen, setIsMapOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [orchardLat, setOrchardLat] = useState(52.49112601595363)
+  const [orchardLon, setOrchardLon] = useState(20.32534254089926)
 
-  const orchardLat = 52.49112601595363
-  const orchardLon = 20.32534254089926
+  // Fetch orchard config on mount
+  useEffect(() => {
+    const fetchOrchardConfig = async () => {
+      try {
+        const response = await apiClient.get('/orders/config')
+        setOrchardLat(response.data.lat)
+        setOrchardLon(response.data.lon)
+      } catch (err) {
+        console.error('Failed to fetch orchard config:', err)
+        // Keep default coordinates
+      }
+    }
+    fetchOrchardConfig()
+  }, [])
  
   // Initialize map when opened
   useEffect(() => {
@@ -57,7 +72,7 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
     const startLat = lat || orchardLat
     const startLon = lon || orchardLon
 
-    map.current = L.map(mapContainer.current).setView([startLat, startLon], 8)
+    map.current = L.map(mapContainer.current).setView([startLat, startLon], 10)
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
@@ -68,7 +83,7 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
     L.marker([orchardLat, orchardLon], {
       icon: L.divIcon({
         html: '<div style="font-size: 2.5rem; text-shadow: 2px 2px 2px rgba(0,0,0,0.3);">🍎</div>',
-        iconSize: [50, 50],
+        iconSize: [32, 32],
         iconAnchor: [25, 50],
         popupAnchor: [0, -50],
         className: 'apple-marker'
@@ -77,18 +92,19 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
       .addTo(map.current)
       .bindPopup('🍎 Srebrna 15 (Sad)')
 
-    // Add user marker if coordinates exist (red pin)
+    // Add user marker if coordinates exist (location pin emoji)
     if (lat && lon) {
       marker.current = L.marker([lat, lon], {
-        icon: L.icon({
-          iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2VmNDMzNiIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyYzAgNSAzLjY0IDkuMjcgOC4zIDkuOTdWMjJjMCAwIDYgLjEgNiAwdjBjNC42NyAwIDEwLTIuMzMgMTAtMTBzLTUuMzMtMTAtMTAtMXptMCA1Yy0yLjc2IDAtNSAyLjI0LTUgNXMyLjI0IDUgNSA1IDUtMi4yNCA1LTUtMi4yNC01LTUtNXoiLz48L3N2Zz4=',
-          iconSize: [32, 32],
-          iconAnchor: [16, 32],
-          popupAnchor: [0, -32]
+        icon: L.divIcon({
+          html: '<div style="font-size: 2rem; text-shadow: 2px 2px 2px rgba(0,0,0,0.3);">📍</div>',
+          iconSize: [40, 40],
+          iconAnchor: [20, 40],
+          popupAnchor: [0, -40],
+          className: 'location-marker'
         })
       })
         .addTo(map.current)
-        .bindPopup(`📍 ${address || 'Wybrany adres'}`)
+        .bindPopup(`${address || 'Wybrany adres'}`)
     }
 
     // Handle map clicks to place marker
@@ -113,11 +129,12 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
         }
 
         marker.current = L.marker([clickLat, clickLon], {
-          icon: L.icon({
-            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2VmNDMzNiIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyYzAgNSAzLjY0IDkuMjcgOC4zIDkuOTdWMjJjMCAwIDYgLjEgNiAwdjBjNC42NyAwIDEwLTIuMzMgMTAtMTBzLTUuMzMtMTAtMTAtMXptMCA1Yy0yLjc2IDAtNSAyLjI0LTUgNXMyLjI0IDUgNSA1IDUtMi4yNCA1LTUtMi4yNC01LTUtNXoiLz48L3N2Zz4=',
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
-            popupAnchor: [0, -32]
+          icon: L.divIcon({
+            html: '<div style="font-size: 2rem; text-shadow: 2px 2px 2px rgba(0,0,0,0.3);">📍</div>',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -40],
+            className: 'location-marker'
           })
         })
           .addTo(map.current)
@@ -148,7 +165,7 @@ export default function MapPicker({ address, lat, lon, onAddressChange }: MapPic
         <div className="map-wrapper">
           <div ref={mapContainer} className="map-container" />
           {loading && <div className="map-loading">Ładowanie...</div>}
-          <p className="map-hint">💡 Kliknij na mapie, aby wybrać adres dostawy. 🟢 Zielony punkt to Twój sad.</p>
+          <p className="map-hint">💡 Kliknij na mapie, aby wybrać adres dostawy.</p>
         </div>
       )}
     </div>
